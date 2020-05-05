@@ -10,6 +10,8 @@ import java.util.List;
 
 /**
  * @author tigi
+ *
+ * Tuto třídu neměnte, pro vypracování semestrální práce není potřeba.
  */
 public class SerializedDataHelper {
 

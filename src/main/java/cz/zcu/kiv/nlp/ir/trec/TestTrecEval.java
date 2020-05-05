@@ -1,6 +1,9 @@
 package cz.zcu.kiv.nlp.ir.trec;
 
 import cz.zcu.kiv.nlp.ir.trec.data.*;
+import cz.zcu.kiv.nlp.ir.trec.stemmer.CzechStemmerAgressive;
+import cz.zcu.kiv.nlp.ir.trec.stemmer.CzechStemmerLight;
+import cz.zcu.kiv.nlp.ir.trec.tokenizer.AdvancedTokenizer;
 import org.apache.log4j.*;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
@@ -16,8 +19,10 @@ import java.util.*;
 
 /**
  * @author tigi
+ *
+ * Třída slouží pro vyhodnocení vámi vytvořeného vyhledávače
+ *
  */
-
 public class TestTrecEval {
 
     static Logger log = Logger.getLogger(TestTrecEval.class);
@@ -42,11 +47,27 @@ public class TestTrecEval {
         Logger.getRootLogger().setLevel(Level.INFO);
     }
 
+    /**
+     * Metoda vytvoří objekt indexu, načte data, zaindexuje je provede předdefinované dotazy a výsledky vyhledávání
+     * zapíše souboru a pokusí se spustit evaluační skript.
+     *
+     * Na windows evaluační skript pravděpodbně nebude možné spustit. Pokud chcete můžete si skript přeložit a pak
+     * by mělo být možné ho spustit.
+     *
+     * Pokud se váme skript nechce překládat/nebo se vám to nepodaří. Můžete vygenerovaný soubor s výsledky zkopírovat a
+     * spolu s přiloženým skriptem spustit (přeložit) na
+     * Linuxu např. pomocí vašeho účtu na serveru ares.fav.zcu.cz
+     *
+     * Metodu není třeba měnit kromě řádků označených T O D O  - tj. vytvoření objektu třídy {@link Index} a
+     */
     public static void main(String args[]) throws IOException {
         configureLogger();
 
-//        todo constructor
-        Index index = new Index();
+        String indexedDataFilename = Constants.FILENAME_DATA_INDEX_CUSTOM;
+        //String indexedDataFilename = Constants.FILENAME_DATA_INDEX_CRAWLERED;
+
+        Index index = new Index(new CzechStemmerAgressive(), new AdvancedTokenizer(), Constants.FILENAME_STOPWORDS,
+                false, true, true);
 
         List<Topic> topics = SerializedDataHelper.loadTopic(new File(OUTPUT_DIR + "/topicData.bin"));
 
@@ -65,10 +86,23 @@ public class TestTrecEval {
         }
         log.info("Documents: " + documents.size());
 
+        // TODO: použít až bude indexace ok.
+        /*
+        if (!index.loadIndexedData(indexedDataFilename)) {
+            index.index(documents);
+            index.saveIndexedData(indexedDataFilename);
+        }
+         */
+        index.index(documents);
 
         List<String> lines = new ArrayList<String>();
 
         for (Topic t : topics) {
+            //TODO vytvoření dotazu, třída Topic představuje dotaz pro vyhledávání v zaindexovaných dokumentech
+            //a obsahuje tři textová pole title, description a narrative. To jak sestavíte dotaz je na Vás a pravděpodobně
+            //to ovlivní výsledné vyhledávání - zkuste změnit a uvidíte jaký MAP (Mean Average Precision) dostanete pro jednotlivé
+            //kombinace např. pokud budete vyhledávat jen pomocí title (t.getTitle()) nebo jen pomocí description (t.getDescription())
+            //nebo jejich kombinací (t.getTitle() + " " + t.getDescription())
             List<Result> resultHits = index.search(t.getTitle() + " " + t.getDescription());
 
             Comparator<Result> cmp = new Comparator<Result>() {

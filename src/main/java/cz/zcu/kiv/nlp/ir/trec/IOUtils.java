@@ -7,6 +7,8 @@ import java.util.List;
 
 /**
  * @author tigi
+ *
+ * IOUtils, existující metody neměňte.
  */
 public class IOUtils {
 
