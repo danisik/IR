@@ -10,8 +10,8 @@ package cz.zcu.kiv.nlp.ir.trec.data;
 public class ResultImpl extends AbstractResult implements Comparable<ResultImpl> {
 
     public ResultImpl(String documentID, float score) {
-        this.documentID = documentID;
-        this.score = score;
+        this.setDocumentID(documentID);
+        this.setScore(score);
     }
 
     @Override

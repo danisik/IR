@@ -10,7 +10,7 @@ public class CzechStemmerAgressive implements Stemmer{
     /**
      * A buffer of the current word being stemmed
      */
-    private StringBuffer sb=new StringBuffer();
+    private StringBuffer sb = new StringBuffer();
 
     /**
      * Default constructor

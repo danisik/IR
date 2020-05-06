@@ -1,10 +1,8 @@
 package cz.zcu.kiv.nlp.ir.trec.data;
 
-import cz.zcu.kiv.nlp.ir.trec.math.CosineSimilarity;
-
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -17,14 +15,18 @@ import java.util.Map;
  *
  */
 public class DocumentNew implements Document, Serializable {
-    String text;
-    String id;
-    String title;
-    Date date;
-    float euclidStandard;
-    Map<String, DocumentValues> words;
+    private String text;
+    private String id;
+    private String title;
+    private Date date;
+    private float euclidStandard;
+    private Map<String, DocumentWordValues> words;
 
-    final static long serialVersionUID = -5097715898427114007L;
+    public DocumentNew() {
+        words = new HashMap<>();
+    }
+
+    private final static long serialVersionUID = -5097715898427114007L;
 
     @Override
     public String toString() {
@@ -82,13 +84,19 @@ public class DocumentNew implements Document, Serializable {
         this.date = date;
     }
 
-    public Map<String, DocumentValues> getWords() {
-        return words;
+    public void initWords() {
+        this.words = new HashMap<>();
     }
 
-    public void setWords(Map<String, DocumentValues> words) {
-        this.words = words;
+    public void addWord(String word) {
+        if (!words.containsKey(word)) {
+            words.put(word, new DocumentWordValues());
+        }
+        words.get(word).incrementTf();
+    }
 
-        this.euclidStandard = CosineSimilarity.computeEuclidStandard(new ArrayList(words.values()));
+    @Override
+    public Map<String, DocumentWordValues> getWords() {
+        return this.words;
     }
 }

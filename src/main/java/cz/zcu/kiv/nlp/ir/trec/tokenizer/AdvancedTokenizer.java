@@ -6,11 +6,11 @@ package cz.zcu.kiv.nlp.ir.trec.tokenizer;
 
 import cz.zcu.kiv.nlp.ir.trec.data.Constants;
 import cz.zcu.kiv.nlp.ir.trec.utils.Utils;
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.cz.CzechAnalyzer;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.Array;
 import java.text.Normalizer;
 import java.util.ArrayList;
@@ -55,27 +55,28 @@ public class AdvancedTokenizer implements Tokenizer {
             "([0-9]+|[a-zA-Z]+)+(\\.|\\,)+$"
     ;
 
-    public static String[] tokenize(String text, String regex, String stopwordsFilename) {
+    private static List<String> stopwords;
+
+    public AdvancedTokenizer(String stopwordsFilename) {
+        stopwords = Utils.readFromFile(stopwordsFilename);
+    }
+
+    public static ArrayList<String> tokenize(String text, String regex) {
         Pattern pattern = Pattern.compile(regex);
 
         ArrayList<String> words = new ArrayList<String>();
 
         Matcher matcher = pattern.matcher(text);
 
-        ArrayList<String> stopWords = Utils.readFromFile(stopwordsFilename);
-
         while (matcher.find()) {
             int start = matcher.start();
             int end = matcher.end();
 
             String word = text.substring(start, end);
-            if (!stopWords.contains(word)) words.add(word);
+            if (!stopwords.contains(word)) words.add(word);
         }
 
-        String[] ws = new String[words.size()];
-        ws = words.toArray(ws);
-
-        return ws;
+        return words;
     }
 
     public String removeAccents(String text) {
@@ -83,7 +84,7 @@ public class AdvancedTokenizer implements Tokenizer {
     }
 
     @Override
-    public String[] tokenize(String text, String stopwordsFilename) {
-        return tokenize(text, defaultRegex, stopwordsFilename);
+    public ArrayList<String> tokenize(String text) {
+        return tokenize(text, defaultRegex);
     }
 }

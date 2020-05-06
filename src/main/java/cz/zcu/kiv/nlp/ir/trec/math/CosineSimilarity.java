@@ -1,9 +1,9 @@
 package cz.zcu.kiv.nlp.ir.trec.math;
 
 import cz.zcu.kiv.nlp.ir.trec.data.Document;
-import cz.zcu.kiv.nlp.ir.trec.data.DocumentValues;
-import cz.zcu.kiv.nlp.ir.trec.data.Result;
+import cz.zcu.kiv.nlp.ir.trec.data.DocumentWordValues;
 import cz.zcu.kiv.nlp.ir.trec.data.ResultImpl;
+import cz.zcu.kiv.nlp.ir.trec.data.Word;
 
 import java.util.*;
 
@@ -17,13 +17,13 @@ public class CosineSimilarity {
      * @param values - List of document values.
      * @return Euclid standard.
      */
-    public static float computeEuclidStandard(List<DocumentValues> values) {
+    public static float computeEuclidStandard(List<DocumentWordValues> values) {
 
         float multiplication = 0;
 
         // Compute multiplication.
-        for (DocumentValues documentValues : values) {
-            multiplication += Math.pow(documentValues.getTfidf(), 2);
+        for (DocumentWordValues documentWordValues : values) {
+            multiplication += Math.pow(documentWordValues.getTfidf(), 2);
         }
 
         // Compute square root.
@@ -38,7 +38,7 @@ public class CosineSimilarity {
      * @param queryValues - Query values.
      * @return Scalar product.
      */
-    public static float computeScalarProduct(Map<String, DocumentValues> documentValues, Map<String, DocumentValues> queryValues) {
+    public static float computeScalarProduct(Map<String, DocumentWordValues> documentValues, Map<String, DocumentWordValues> queryValues) {
 
         float scalarProduct = 0;
 

@@ -15,10 +15,10 @@ import java.util.List;
  */
 public class SerializedDataHelper {
 
-    static Logger log = Logger.getLogger(SerializedDataHelper.class);
-    static final java.text.DateFormat SDF = new SimpleDateFormat("yyyy-MM-dd_HH_mm_SS");
+    private static Logger log = Logger.getLogger(SerializedDataHelper.class);
+    public static final java.text.DateFormat SDF = new SimpleDateFormat("yyyy-MM-dd_HH_mm_SS");
 
-    static public List<Document> loadDocument(File serializedFile) {
+    public static List<Document> loadDocument(File serializedFile) {
         final Object object;
         try {
             final ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(serializedFile));
@@ -47,7 +47,7 @@ public class SerializedDataHelper {
         log.info("Data saved to " + outputFile.getPath());
     }
 
-    static public List<Topic> loadTopic(File serializedFile) {
+    public static List<Topic> loadTopic(File serializedFile) {
         final Object object;
         try {
             final ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(serializedFile));

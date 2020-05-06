@@ -10,6 +10,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,22 +28,20 @@ import java.util.Map;
  */
 public class Index implements Indexer, Searcher {
 
-    static Logger log = Logger.getLogger(Index.class);
+    private static Logger log = Logger.getLogger(Index.class);
 
     private Dictionary dictionary;
 
     private Stemmer stemmer;
     private Tokenizer tokenizer;
-    private String stopwordsFilename;
     private boolean removeAccentsBeforeStemming;
     private boolean removeAccentsAfterStemming;
     private boolean toLowercase;
 
-    public Index(Stemmer stemmer, Tokenizer tokenizer, String stopwordsFilename, boolean removeAccentsBeforeStemming, boolean removeAccentsAfterStemming, boolean toLowercase) {
+    public Index(Stemmer stemmer, Tokenizer tokenizer, boolean removeAccentsBeforeStemming, boolean removeAccentsAfterStemming, boolean toLowercase) {
         this.dictionary = new Dictionary();
         this.stemmer = stemmer;
         this.tokenizer = tokenizer;
-        this.stopwordsFilename = stopwordsFilename;
         this.removeAccentsBeforeStemming = removeAccentsBeforeStemming;
         this.removeAccentsAfterStemming = removeAccentsAfterStemming;
         this.toLowercase = toLowercase;
@@ -56,12 +55,13 @@ public class Index implements Indexer, Searcher {
 
     public void index(List<Document> documents) {
         //  todo implement - implementovat jako přidávání do words, ne jako inicializaci words.
-        Map<String, Integer> wordsWithCount = new HashMap<>();
 
         long startTime = System.currentTimeMillis();
         log.info("Start indexing.");
         // Iterate through every document.
+        int i = 0;
         for (Document document : documents) {
+            document.initWords();
             String line = document.getDataForPreprocessing();
 
             if (toLowercase) {
@@ -72,38 +72,68 @@ public class Index implements Indexer, Searcher {
                 line = tokenizer.removeAccents(line);
             }
 
-            for (String word : tokenizer.tokenize(line, stopwordsFilename)) {
+            ArrayList<String> words = tokenizer.tokenize(line);
+            for (String word : words) {
 
-                word = stemmer.stem(word);
+                if (stemmer != null) {
+                    word = stemmer.stem(word);
+                }
+
                 if (removeAccentsAfterStemming) {
                     word = tokenizer.removeAccents(word);
                 }
 
-                if (!wordsWithCount.containsKey(word)) {
-                    wordsWithCount.put(word, 1);
+                if (!dictionary.containsWord(word)) {
+                    dictionary.addWord(word);
                 }
-                else {
-                    wordsWithCount.put(word, wordsWithCount.get(word) + 1);
-                }
+                dictionary.addDocument(word, i);
+
+                document.addWord(word);
             }
+
+            i++;
         }
         long estimatedTime = System.currentTimeMillis() - startTime;
         log.info("Indexing done after " + (double)estimatedTime / 1000 + " seconds");
         int documentsCount = documents.size();
 
+        // Calculating IDF.
         startTime = System.currentTimeMillis();
         log.info("Calculating IDF for every word.");
 
+        dictionary.calculateIDF(documentsCount);
 
-        for (String word : wordsWithCount.keySet()) {
-            dictionary.addWord(word, TFIDF.calculateIDF(documentsCount, wordsWithCount.get(word)));
-        }
-
-        log.info("Calculating IDF done.");
         estimatedTime = System.currentTimeMillis() - startTime;
         log.info("Calculating IDF done after " + (double)estimatedTime / 1000 + " seconds");
 
+        // Calculating TFIDF.
+        startTime = System.currentTimeMillis();
+        log.info("Calculating TFIDF for every word in documents.");
+
+        calculateDocumentWordsTFIDF(documents);
+
+        estimatedTime = System.currentTimeMillis() - startTime;
+        log.info("Calculating TFIDF done after " + (double)estimatedTime / 1000 + " seconds");
+
         // TODO: projít znovu list dokumentů a vytvořit invertovaný index + zároveň vypočítat tf-idf pro každý dokument.
+    }
+
+    public void calculateDocumentWordsTFIDF(List<Document> documents) {
+        Map<String, Float> wordsWithIDF = dictionary.getWords();
+
+        for (Document document : documents) {
+            Map<String, DocumentWordValues> documentWords = document.getWords();
+
+            float euclidStandard = 0;
+            for (String word : documentWords.keySet()) {
+                DocumentWordValues documentWordValues = documentWords.get(word);
+                float tfidf = TFIDF.calculateTFIDF(documentWordValues.getTf(), wordsWithIDF.get(word));
+                documentWordValues.setTfidf(tfidf);
+                euclidStandard += Math.pow(tfidf, 2);
+            }
+            euclidStandard = (float) Math.sqrt(euclidStandard);
+            document.setEuclidStandard(euclidStandard);
+        }
     }
 
     public void index(Document document) {
@@ -141,5 +171,21 @@ public class Index implements Indexer, Searcher {
             log.warn("Saving indexed data into file '" + filename + "'  was unsuccessful!");
             return false;
         }
+    }
+
+    public String getProcessedForm(String text) {
+        if (toLowercase) {
+            text = text.toLowerCase();
+        }
+        if (removeAccentsBeforeStemming) {
+            text = tokenizer.removeAccents(text);
+        }
+        if (stemmer != null) {
+            text = stemmer.stem(text);
+        }
+        if (removeAccentsAfterStemming) {
+            text = tokenizer.removeAccents(text);
+        }
+        return text;
     }
 }

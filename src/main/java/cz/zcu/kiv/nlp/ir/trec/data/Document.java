@@ -1,7 +1,6 @@
 package cz.zcu.kiv.nlp.ir.trec.data;
 
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -45,6 +44,12 @@ public interface Document {
 
     float getEuclidStandard();
 
-    public Map<String, DocumentValues> getWords();
+    void setEuclidStandard(float euclidStandard);
+
+    void initWords();
+
+    void addWord(String word);
+
+    Map<String, DocumentWordValues> getWords();
 
 }

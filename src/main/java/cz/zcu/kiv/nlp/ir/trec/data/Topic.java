@@ -11,11 +11,13 @@ import java.io.Serializable;
  * Obsahuje tři textová pole narrative, description a title, která můžete použít ve vašem dotazu.
  */
 public class Topic implements Serializable {
-    String narrative;
-    String description;
-    String id;
-    String title;
-    String lang;
+    private String narrative;
+    private String description;
+    private String id;
+    private String title;
+    private String lang;
+
+    private final static long serialVersionUID = -1796123305123360077L;
 
     public String getNarrative() {
         return narrative;

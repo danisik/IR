@@ -25,8 +25,8 @@ import java.util.*;
  */
 public class TestTrecEval {
 
-    static Logger log = Logger.getLogger(TestTrecEval.class);
-    static final String OUTPUT_DIR = "./TREC";
+    private static Logger log = Logger.getLogger(TestTrecEval.class);
+    private static final String OUTPUT_DIR = "./TREC";
 
     protected static void configureLogger() {
         BasicConfigurator.resetConfiguration();
@@ -66,7 +66,7 @@ public class TestTrecEval {
         String indexedDataFilename = Constants.FILENAME_DATA_INDEX_CUSTOM;
         //String indexedDataFilename = Constants.FILENAME_DATA_INDEX_CRAWLERED;
 
-        Index index = new Index(new CzechStemmerAgressive(), new AdvancedTokenizer(), Constants.FILENAME_STOPWORDS,
+        Index index = new Index(new CzechStemmerAgressive(), new AdvancedTokenizer(Constants.FILENAME_STOPWORDS),
                 false, true, true);
 
         List<Topic> topics = SerializedDataHelper.loadTopic(new File(OUTPUT_DIR + "/topicData.bin"));
@@ -86,14 +86,10 @@ public class TestTrecEval {
         }
         log.info("Documents: " + documents.size());
 
-        // TODO: použít až bude indexace ok.
-        /*
         if (!index.loadIndexedData(indexedDataFilename)) {
             index.index(documents);
             index.saveIndexedData(indexedDataFilename);
         }
-         */
-        index.index(documents);
 
         List<String> lines = new ArrayList<String>();
 

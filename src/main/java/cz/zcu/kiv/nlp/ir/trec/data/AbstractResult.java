@@ -22,17 +22,17 @@ public abstract class AbstractResult implements Result {
     /**
      * Id dokumentu
      */
-    String documentID;
+    private String documentID;
 
     /**
      * Rank (pořadí) mezi ostatními vrácenými dokumenty
      */
-    int rank = -1;
+    private int rank = -1;
 
     /**
      * Skóre podobnosti mezi tímto výsledkem (dokumentem) a dotazem
      */
-    float score = -1;
+    private float score = -1;
 
     @Override
     public String getDocumentID() {
