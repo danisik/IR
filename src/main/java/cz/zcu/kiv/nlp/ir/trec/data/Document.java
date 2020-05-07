@@ -42,14 +42,4 @@ public interface Document {
 
     String getDataForPreprocessing();
 
-    float getEuclidStandard();
-
-    void setEuclidStandard(float euclidStandard);
-
-    void initWords();
-
-    void addWord(String word);
-
-    Map<String, DocumentWordValues> getWords();
-
 }

@@ -3,7 +3,6 @@ package cz.zcu.kiv.nlp.ir.trec.math;
 import cz.zcu.kiv.nlp.ir.trec.data.Document;
 import cz.zcu.kiv.nlp.ir.trec.data.DocumentWordValues;
 import cz.zcu.kiv.nlp.ir.trec.data.ResultImpl;
-import cz.zcu.kiv.nlp.ir.trec.data.Word;
 
 import java.util.*;
 
@@ -58,12 +57,15 @@ public class CosineSimilarity {
      * @return Cosine similarity.
      */
     public static float computeCosineSimilarity(Document document, Document query) {
-
+        // TODO: update.
+        /*
         float scalarProduct = computeScalarProduct(document.getWords(), query.getWords());
 
         float cosineSimilarity = (scalarProduct) / (document.getEuclidStandard() * query.getEuclidStandard());
 
         return cosineSimilarity;
+         */
+        return 0;
     }
 
     /**

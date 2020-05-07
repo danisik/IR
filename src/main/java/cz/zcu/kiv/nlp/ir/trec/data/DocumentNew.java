@@ -19,7 +19,7 @@ public class DocumentNew implements Document, Serializable {
     private String id;
     private String title;
     private Date date;
-    private float euclidStandard;
+
     private Map<String, DocumentWordValues> words;
 
     public DocumentNew() {
@@ -71,32 +71,7 @@ public class DocumentNew implements Document, Serializable {
         return date;
     }
 
-    public void setEuclidStandard(float euclidStandard) {
-        this.euclidStandard = euclidStandard;
-    }
-
-    @Override
-    public float getEuclidStandard() {
-        return euclidStandard;
-    }
-
     public void setDate(Date date) {
         this.date = date;
-    }
-
-    public void initWords() {
-        this.words = new HashMap<>();
-    }
-
-    public void addWord(String word) {
-        if (!words.containsKey(word)) {
-            words.put(word, new DocumentWordValues());
-        }
-        words.get(word).incrementTf();
-    }
-
-    @Override
-    public Map<String, DocumentWordValues> getWords() {
-        return this.words;
     }
 }

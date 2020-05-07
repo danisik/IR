@@ -6,10 +6,7 @@ import cz.zcu.kiv.nlp.ir.trec.stemmer.Stemmer;
 import cz.zcu.kiv.nlp.ir.trec.tokenizer.Tokenizer;
 import org.apache.log4j.Logger;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -59,9 +56,8 @@ public class Index implements Indexer, Searcher {
         long startTime = System.currentTimeMillis();
         log.info("Start indexing.");
         // Iterate through every document.
-        int i = 0;
         for (Document document : documents) {
-            document.initWords();
+            String documentId = document.getId();
             String line = document.getDataForPreprocessing();
 
             if (toLowercase) {
@@ -86,12 +82,9 @@ public class Index implements Indexer, Searcher {
                 if (!dictionary.containsWord(word)) {
                     dictionary.addWord(word);
                 }
-                dictionary.addDocument(word, i);
-
-                document.addWord(word);
+                dictionary.addDocumentId(word, documentId);
+                dictionary.addDocumentWord(documentId, word);
             }
-
-            i++;
         }
         long estimatedTime = System.currentTimeMillis() - startTime;
         log.info("Indexing done after " + (double)estimatedTime / 1000 + " seconds");
@@ -122,7 +115,8 @@ public class Index implements Indexer, Searcher {
         Map<String, Float> wordsWithIDF = dictionary.getWords();
 
         for (Document document : documents) {
-            Map<String, DocumentWordValues> documentWords = document.getWords();
+            DocumentValues documentValues = dictionary.getDocumentValuesById(document.getId());
+            Map<String, DocumentWordValues> documentWords = documentValues.getWordValues();
 
             float euclidStandard = 0;
             for (String word : documentWords.keySet()) {
@@ -132,7 +126,7 @@ public class Index implements Indexer, Searcher {
                 euclidStandard += Math.pow(tfidf, 2);
             }
             euclidStandard = (float) Math.sqrt(euclidStandard);
-            document.setEuclidStandard(euclidStandard);
+            documentValues.setEuclidStandard(euclidStandard);
         }
     }
 
@@ -153,8 +147,14 @@ public class Index implements Indexer, Searcher {
             ois.close();
             log.info("Indexed data was loaded successfully from file '" + filename + "'.");
             return true;
-        } catch (Exception e) {
+        } catch (FileNotFoundException e) {
             log.warn("File '" + filename + "' for indexed data was not found!");
+            return false;
+        } catch (EOFException e) {
+            log.warn("File '" + filename + "' for indexed data is damaged and cannot be loaded!");
+            return false;
+        } catch (Exception e) {
+            log.warn("Error shown when loading data from file '" + filename + "' for indexed data!");
             return false;
         }
     }
