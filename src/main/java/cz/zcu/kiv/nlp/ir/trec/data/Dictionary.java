@@ -1,5 +1,6 @@
 package cz.zcu.kiv.nlp.ir.trec.data;
 
+import cz.zcu.kiv.nlp.ir.trec.data.document.DocumentValues;
 import cz.zcu.kiv.nlp.ir.trec.math.TFIDF;
 
 import java.io.Serializable;

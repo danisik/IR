@@ -1,4 +1,4 @@
-package cz.zcu.kiv.nlp.ir.trec.data;
+package cz.zcu.kiv.nlp.ir.trec.data.document;
 
 import java.util.Date;
 import java.util.Map;
@@ -26,6 +26,8 @@ public interface Document {
      * @return id dokumentu
      */
     String getId();
+
+    void setId(String id);
 
     /**
      * Titulek dokumentu

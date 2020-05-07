@@ -1,8 +1,7 @@
-package cz.zcu.kiv.nlp.ir.trec;
+package cz.zcu.kiv.nlp.ir.trec.indexer;
 
-import cz.zcu.kiv.nlp.ir.trec.data.Document;
+import cz.zcu.kiv.nlp.ir.trec.data.document.Document;
 
-import javax.print.Doc;
 import java.util.List;
 
 /**

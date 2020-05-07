@@ -1,6 +1,12 @@
-package cz.zcu.kiv.nlp.ir.trec;
+package cz.zcu.kiv.nlp.ir.trec.indexer;
 
+import cz.zcu.kiv.nlp.ir.trec.Searcher;
 import cz.zcu.kiv.nlp.ir.trec.data.*;
+import cz.zcu.kiv.nlp.ir.trec.data.document.Document;
+import cz.zcu.kiv.nlp.ir.trec.data.document.DocumentValues;
+import cz.zcu.kiv.nlp.ir.trec.data.document.DocumentWordValues;
+import cz.zcu.kiv.nlp.ir.trec.data.result.Result;
+import cz.zcu.kiv.nlp.ir.trec.math.CosineSimilarity;
 import cz.zcu.kiv.nlp.ir.trec.math.TFIDF;
 import cz.zcu.kiv.nlp.ir.trec.stemmer.Stemmer;
 import cz.zcu.kiv.nlp.ir.trec.tokenizer.Tokenizer;
@@ -8,7 +14,6 @@ import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -34,14 +39,16 @@ public class Index implements Indexer, Searcher {
     private boolean removeAccentsBeforeStemming;
     private boolean removeAccentsAfterStemming;
     private boolean toLowercase;
+    private short mostRelevantDocumentsCount;
 
-    public Index(Stemmer stemmer, Tokenizer tokenizer, boolean removeAccentsBeforeStemming, boolean removeAccentsAfterStemming, boolean toLowercase) {
+    public Index(Stemmer stemmer, Tokenizer tokenizer, boolean removeAccentsBeforeStemming, boolean removeAccentsAfterStemming, boolean toLowercase, short mostRelevantDocumentsCount) {
         this.dictionary = new Dictionary();
         this.stemmer = stemmer;
         this.tokenizer = tokenizer;
         this.removeAccentsBeforeStemming = removeAccentsBeforeStemming;
         this.removeAccentsAfterStemming = removeAccentsAfterStemming;
         this.toLowercase = toLowercase;
+        this.mostRelevantDocumentsCount = mostRelevantDocumentsCount;
 
         log.info("Stemmer: " + stemmer.getClass().getSimpleName());
         log.info("Tokenizer: " + tokenizer.getClass().getSimpleName());
@@ -103,31 +110,12 @@ public class Index implements Indexer, Searcher {
         startTime = System.currentTimeMillis();
         log.info("Calculating TFIDF for every word in documents.");
 
-        calculateDocumentWordsTFIDF(documents);
+        calculateDocumentsWordsTFIDF(documents);
 
         estimatedTime = System.currentTimeMillis() - startTime;
         log.info("Calculating TFIDF done after " + (double)estimatedTime / 1000 + " seconds");
 
         // TODO: projít znovu list dokumentů a vytvořit invertovaný index + zároveň vypočítat tf-idf pro každý dokument.
-    }
-
-    public void calculateDocumentWordsTFIDF(List<Document> documents) {
-        Map<String, Float> wordsWithIDF = dictionary.getWords();
-
-        for (Document document : documents) {
-            DocumentValues documentValues = dictionary.getDocumentValuesById(document.getId());
-            Map<String, DocumentWordValues> documentWords = documentValues.getWordValues();
-
-            float euclidStandard = 0;
-            for (String word : documentWords.keySet()) {
-                DocumentWordValues documentWordValues = documentWords.get(word);
-                float tfidf = TFIDF.calculateTFIDF(documentWordValues.getTf(), wordsWithIDF.get(word));
-                documentWordValues.setTfidf(tfidf);
-                euclidStandard += Math.pow(tfidf, 2);
-            }
-            euclidStandard = (float) Math.sqrt(euclidStandard);
-            documentValues.setEuclidStandard(euclidStandard);
-        }
     }
 
     public void index(Document document) {
@@ -136,7 +124,46 @@ public class Index implements Indexer, Searcher {
 
     public List<Result> search(String query) {
         //  todo implement
-        return null;
+        // TODO: tokenize query
+        // TODO: compute tf-idf
+        // TODO: compute cosine similarity and return most relevant documents.
+
+        DocumentValues indexedQuery = new DocumentValues();
+
+        ArrayList<String> words = tokenizer.tokenize(query);
+        for (String word : words) {
+            indexedQuery.addWord(getProcessedForm(word));
+        }
+
+        calculateDocumentWordsTFIDF(indexedQuery);
+
+        List<Result> results = CosineSimilarity.getMostRelevantDocumentToQuery(dictionary, indexedQuery, mostRelevantDocumentsCount);
+
+        return results;
+    }
+
+
+    private void calculateDocumentsWordsTFIDF(List<Document> documents) {
+        for (Document document : documents) {
+            DocumentValues documentValues = dictionary.getDocumentValuesById(document.getId());
+            calculateDocumentWordsTFIDF(documentValues);
+        }
+    }
+
+    private void calculateDocumentWordsTFIDF(DocumentValues documentValues) {
+        Map<String, Float> wordsWithIDF = dictionary.getWords();
+        Map<String, DocumentWordValues> documentWords = documentValues.getWordValues();
+
+        // TODO: indonesz -> hází error, zřejmě není ve slovníku ??
+        float euclidStandard = 0;
+        for (String word : documentWords.keySet()) {
+            DocumentWordValues documentWordValues = documentWords.get(word);
+            float tfidf = TFIDF.calculateTFIDF(documentWordValues.getTf(), wordsWithIDF.get(word));
+            documentWordValues.setTfidf(tfidf);
+            euclidStandard += Math.pow(tfidf, 2);
+        }
+        euclidStandard = (float) Math.sqrt(euclidStandard);
+        documentValues.setEuclidStandard(euclidStandard);
     }
 
     public boolean loadIndexedData(String filename) {
@@ -173,19 +200,23 @@ public class Index implements Indexer, Searcher {
         }
     }
 
-    public String getProcessedForm(String text) {
+    private String getProcessedForm(String word) {
         if (toLowercase) {
-            text = text.toLowerCase();
+            word = word.toLowerCase();
         }
         if (removeAccentsBeforeStemming) {
-            text = tokenizer.removeAccents(text);
+            word = tokenizer.removeAccents(word);
         }
         if (stemmer != null) {
-            text = stemmer.stem(text);
+            word = stemmer.stem(word);
         }
         if (removeAccentsAfterStemming) {
-            text = tokenizer.removeAccents(text);
+            word = tokenizer.removeAccents(word);
         }
-        return text;
+        return word;
+    }
+
+    public void setMostRelevantDocumentsCount(short mostRelevantDocumentsCount) {
+        this.mostRelevantDocumentsCount = mostRelevantDocumentsCount;
     }
 }

@@ -1,6 +1,7 @@
 package cz.zcu.kiv.nlp.ir.trec;
 
-import cz.zcu.kiv.nlp.ir.trec.data.Result;
+import cz.zcu.kiv.nlp.ir.trec.data.result.Result;
+import cz.zcu.kiv.nlp.ir.trec.indexer.Index;
 
 import java.util.List;
 
