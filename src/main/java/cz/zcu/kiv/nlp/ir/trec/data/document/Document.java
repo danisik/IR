@@ -27,6 +27,10 @@ public interface Document {
      */
     String getId();
 
+    /**
+     * Nastavení unikátního id dokumentu.
+     * @param id - Id dokumentu.
+     */
     void setId(String id);
 
     /**
@@ -42,6 +46,10 @@ public interface Document {
      */
     Date getDate();
 
+    /**
+     * Získání řádky textu, která bude použita pro preprocessing pro daný dokument.
+     * @return Text.
+     */
     String getDataForPreprocessing();
 
 }

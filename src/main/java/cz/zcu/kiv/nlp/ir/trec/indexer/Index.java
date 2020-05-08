@@ -41,6 +41,17 @@ public class Index implements Indexer, Searcher {
     private boolean toLowercase;
     private short mostRelevantDocumentsCount;
 
+    private ESearchType searchType;
+
+    /**
+     * Constructor.
+     * @param stemmer - Použitý stemmer.
+     * @param tokenizer - Použitý tokenizer.
+     * @param removeAccentsBeforeStemming - Pokud true, smaže diakritiku před stemmerem.
+     * @param removeAccentsAfterStemming - Pokud true, smaže diakritiku po stemmeru.
+     * @param toLowercase - Pokud true, tak všechny znaky převede do lowercase.
+     * @param mostRelevantDocumentsCount - Počet dokumentů, kteří jsou nejvíce relevantní k dotazu.
+     */
     public Index(Stemmer stemmer, Tokenizer tokenizer, boolean removeAccentsBeforeStemming, boolean removeAccentsAfterStemming, boolean toLowercase, short mostRelevantDocumentsCount) {
         this.dictionary = new Dictionary();
         this.stemmer = stemmer;
@@ -50,6 +61,9 @@ public class Index implements Indexer, Searcher {
         this.toLowercase = toLowercase;
         this.mostRelevantDocumentsCount = mostRelevantDocumentsCount;
 
+        // Default search type.
+        this.searchType = ESearchType.SVM;
+
         log.info("Stemmer: " + stemmer.getClass().getSimpleName());
         log.info("Tokenizer: " + tokenizer.getClass().getSimpleName());
         log.info("Accents removed before steming: " + removeAccentsBeforeStemming);
@@ -57,92 +71,110 @@ public class Index implements Indexer, Searcher {
         log.info("To lower case: " + toLowercase);
     }
 
+    /**
+     * Metoda zaindexuje zadaný seznam dokumentů
+     *
+     * @param documents list dokumentů
+     */
     public void index(List<Document> documents) {
-        //  todo implement - implementovat jako přidávání do words, ne jako inicializaci words.
-
         long startTime = System.currentTimeMillis();
         log.info("Start indexing.");
+
         // Iterate through every document.
         for (Document document : documents) {
             String documentId = document.getId();
+
+            // Get line of text of specific documents attributes.
             String line = document.getDataForPreprocessing();
 
+            // Lowercase line if set.
             if (toLowercase) {
                 line.toLowerCase();
             }
 
+            // Remove accents before stemming if sets.
             if (removeAccentsBeforeStemming) {
                 line = tokenizer.removeAccents(line);
             }
 
+            // Get words with tokenizer.
             ArrayList<String> words = tokenizer.tokenize(line);
             for (String word : words) {
 
+                // Apply stemmer if created.
                 if (stemmer != null) {
                     word = stemmer.stem(word);
                 }
 
+                // Remove accents after stemming if sets.
                 if (removeAccentsAfterStemming) {
                     word = tokenizer.removeAccents(word);
                 }
 
+                // Add word into dictionary if not presented.
                 if (!dictionary.containsWord(word)) {
                     dictionary.addWord(word);
                 }
+                // Add document id for specific word.
                 dictionary.addDocumentId(word, documentId);
+                // Add word into document's dictionary.
                 dictionary.addDocumentWord(documentId, word);
             }
         }
         long estimatedTime = System.currentTimeMillis() - startTime;
         log.info("Indexing done after " + (double)estimatedTime / 1000 + " seconds");
+
         int documentsCount = documents.size();
-
-        // Calculating IDF.
-        startTime = System.currentTimeMillis();
-        log.info("Calculating IDF for every word.");
-
+        // Calculating IDF for dictionary.
         dictionary.calculateIDF(documentsCount);
 
-        estimatedTime = System.currentTimeMillis() - startTime;
-        log.info("Calculating IDF done after " + (double)estimatedTime / 1000 + " seconds");
-
-        // Calculating TFIDF.
-        startTime = System.currentTimeMillis();
-        log.info("Calculating TFIDF for every word in documents.");
-
+        // Calculating TFIDF for every word in every document.
         calculateDocumentsWordsTFIDF(documents);
-
-        estimatedTime = System.currentTimeMillis() - startTime;
-        log.info("Calculating TFIDF done after " + (double)estimatedTime / 1000 + " seconds");
-
-        // TODO: projít znovu list dokumentů a vytvořit invertovaný index + zároveň vypočítat tf-idf pro každý dokument.
     }
 
-    public void index(Document document) {
-        // todo implement
-    }
-
+    /**
+     * Metoda pro hledání v dokumentech.
+     * @param query - Query.
+     * @return List výsledků nejvíce relevantních k zadané query.
+     */
     public List<Result> search(String query) {
-        //  todo implement
-        // TODO: tokenize query
-        // TODO: compute tf-idf
-        // TODO: compute cosine similarity and return most relevant documents.
+        List<Result> results = null;
 
-        DocumentValues indexedQuery = new DocumentValues();
+        switch(searchType) {
+            // SVM searching.
+            case SVM:
+                DocumentValues indexedQuery = new DocumentValues();
 
-        ArrayList<String> words = tokenizer.tokenize(query);
-        for (String word : words) {
-            indexedQuery.addWord(getProcessedForm(word));
+                // Tokenize query.
+                ArrayList<String> words = tokenizer.tokenize(query);
+                for (String word : words) {
+                    // Apply stemmer and lemmatizer on word.
+                    indexedQuery.addWord(getProcessedForm(word));
+                }
+
+                // Calculate tfidf for query words.
+                calculateDocumentWordsTFIDF(indexedQuery);
+
+                // Compare cosine similarities and reutnr most relevant documents.
+                results = CosineSimilarity.getMostRelevantDocumentToQuery(dictionary, indexedQuery, mostRelevantDocumentsCount);
+                break;
+
+            // BOOLEAN searching.
+            case BOOLEAN:
+                break;
+
+            // Default.
+            default:
+                break;
         }
-
-        calculateDocumentWordsTFIDF(indexedQuery);
-
-        List<Result> results = CosineSimilarity.getMostRelevantDocumentToQuery(dictionary, indexedQuery, mostRelevantDocumentsCount);
 
         return results;
     }
 
-
+    /**
+     * Metoda vypočítá tfidf hodnotu pro všechny dokumenty.
+     * @param documents - Dokumenty.
+     */
     private void calculateDocumentsWordsTFIDF(List<Document> documents) {
         for (Document document : documents) {
             DocumentValues documentValues = dictionary.getDocumentValuesById(document.getId());
@@ -150,6 +182,10 @@ public class Index implements Indexer, Searcher {
         }
     }
 
+    /**
+     * Metoda vypočítá tfidf hodnotu pro všechny slova v zadaném dokumentu.
+     * @param documentValues - Hodnoty dokumentu.
+     */
     private void calculateDocumentWordsTFIDF(DocumentValues documentValues) {
         Map<String, Float> wordsWithIDF = dictionary.getWords();
         Map<String, DocumentWordValues> documentWords = documentValues.getWordValues();
@@ -166,6 +202,11 @@ public class Index implements Indexer, Searcher {
         documentValues.setEuclidStandard(euclidStandard);
     }
 
+    /**
+     * Metoda načte indexovaná data ze souboru.
+     * @param filename - Název souboru.
+     * @return True pokud načítání proběhlo úspěšně.
+     */
     public boolean loadIndexedData(String filename) {
         try {
             FileInputStream fin = new FileInputStream(filename);
@@ -186,6 +227,11 @@ public class Index implements Indexer, Searcher {
         }
     }
 
+    /**
+     * Metoda uloží indexovaná data do souboru.
+     * @param filename - Název souboru.
+     * @return True pokud ukládání proběhlo úspěšně.
+     */
     public boolean saveIndexedData(String filename) {
         try {
             FileOutputStream fout = new FileOutputStream(filename);
@@ -200,6 +246,11 @@ public class Index implements Indexer, Searcher {
         }
     }
 
+    /**
+     * Vrátí slovo, které proběhlo úpravou (stemmer, lemmer, lowercase, accent).
+     * @param word - Zpracovávané slovo.
+     * @return Zpracované slovo.
+     */
     private String getProcessedForm(String word) {
         if (toLowercase) {
             word = word.toLowerCase();
@@ -216,7 +267,19 @@ public class Index implements Indexer, Searcher {
         return word;
     }
 
+    /**
+     * Nastaví počet dokumentů, který se mají vrátit z hledání.
+     * @param mostRelevantDocumentsCount - Počet dokumentů.
+     */
     public void setMostRelevantDocumentsCount(short mostRelevantDocumentsCount) {
         this.mostRelevantDocumentsCount = mostRelevantDocumentsCount;
+    }
+
+    /**
+     * Nastaví typ hledání (SVM, Boolean, ...).
+     * @param searchType - Typ hledání.
+     */
+    public void setSearchType(ESearchType searchType) {
+        this.searchType = searchType;
     }
 }

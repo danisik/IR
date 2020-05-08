@@ -5,6 +5,9 @@ import cz.zcu.kiv.nlp.ir.trec.data.document.Document;
 import java.io.Serializable;
 import java.util.Date;
 
+/**
+ * Třída reprezentující data stažená z internetu pomocí crawleru.
+ */
 public class CrawleredDocument implements Document, Serializable {
 
     private String id;

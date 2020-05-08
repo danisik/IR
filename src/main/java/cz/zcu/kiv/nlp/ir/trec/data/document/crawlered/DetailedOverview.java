@@ -1,5 +1,8 @@
 package cz.zcu.kiv.nlp.ir.trec.data.document.crawlered;
 
+/**
+ * Třída reprezentující detailní overview pro CrawleredDocument.
+ */
 public class DetailedOverview {
 
     private String offerNumber = "";

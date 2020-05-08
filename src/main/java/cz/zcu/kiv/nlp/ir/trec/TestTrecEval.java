@@ -25,6 +25,7 @@ public class TestTrecEval {
     private static final String OUTPUT_DIR = "./TREC";
     private static final EDataType dataType = EDataType.CRAWLERED;
     private static Index index;
+    private static List<Document> documents;
 
     /**
      * Metoda vytvoří objekt indexu, načte data, zaindexuje je provede předdefinované dotazy a výsledky vyhledávání
@@ -45,7 +46,6 @@ public class TestTrecEval {
         index = new Index(new CzechStemmerAgressive(), new AdvancedTokenizer(Constants.FILENAME_STOPWORDS),
                 false, true, true, (short)10);
 
-        List<Document> documents = null;
         String indexedDataFilename = "";
 
         log.info("Load " + dataType.toString() + " documents.");
@@ -72,7 +72,7 @@ public class TestTrecEval {
             searchInDocumentsFromSchool();
         }
         else if (dataType == EDataType.CRAWLERED){
-            searchInCrawleredDocuments(documents);
+            searchInCrawleredDocuments();
         }
 
     }
@@ -114,9 +114,8 @@ public class TestTrecEval {
         }
     }
 
-    private static void searchInCrawleredDocuments(List<Document> documents) {
+    private static void searchInCrawleredDocuments() {
         String query = "Prodej chalupy 2+1 s pozemkem o celkové výměře 2033";
-        // TODO: implement searching in crawlered documents.
         long startTime = System.currentTimeMillis();
         List<Result> resultHits = index.search(query);
         long estimatedTime = System.currentTimeMillis() - startTime;
@@ -127,7 +126,7 @@ public class TestTrecEval {
         System.out.println("----------------------");
         for (Result r : resultHits) {
             // TODO: delete in final version.
-            CrawleredDocument document = getCrawleredDocument(r.getDocumentID(), documents);
+            CrawleredDocument document = getCrawleredDocument(r.getDocumentID());
             System.out.println("DocumentID: " + r.getDocumentID() + " | Score: " + r.getScore() + " | Rank: " + r.getRank() + " | Title: " + document.getTitle()
             + " | Description: " + document.getDescription());
         }
@@ -135,7 +134,7 @@ public class TestTrecEval {
     }
 
     // TODO: Delete in final version.
-    private static CrawleredDocument getCrawleredDocument(String id, List<Document> documents) {
+    private static CrawleredDocument getCrawleredDocument(String id) {
         for (Document document: documents) {
             if (document.getId().equals(id)) return (CrawleredDocument)document;
         }

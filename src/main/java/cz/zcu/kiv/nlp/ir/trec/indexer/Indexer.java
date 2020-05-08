@@ -24,12 +24,16 @@ public interface Indexer {
     void index(List<Document> documents);
 
     /**
-     * Metoda zaindexuje jeden dokument.
-     * @param document dokument.
+     * Metoda načte indexovaná data ze souboru.
+     * @param filename - Název souboru.
+     * @return True pokud načítání proběhlo úspěšně.
      */
-    void index(Document document);
-
     boolean loadIndexedData(String filename);
 
+    /**
+     * Metoda uloží indexovaná data do souboru.
+     * @param filename - Název souboru.
+     * @return True pokud ukládání proběhlo úspěšně.
+     */
     boolean saveIndexedData(String filename);
 }

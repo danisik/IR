@@ -33,6 +33,12 @@ public class CosineSimilarity {
         return scalarProduct;
     }
 
+    /**
+     * Výpočet cosinovy podobnosti mezi dokumentem a query.
+     * @param document - Dokument.
+     * @param query - Query.
+     * @return Cosinova podobnost.
+     */
     public static float computeCosineSimilarity(DocumentValues document, DocumentValues query) {
         float scalarProduct = computeScalarProduct(document.getWordValues(), query.getWordValues());
 
@@ -41,6 +47,13 @@ public class CosineSimilarity {
         return cosineSimilarity;
     }
 
+    /**
+     * Metoda pro získání nejvíce relevantních dokumentů k zadané query.
+     * @param dictionary - Slovník.
+     * @param query - Query.
+     * @param mostRelevantDocumentsCount - Počet dokumentů.
+     * @return List výsledků.
+     */
     public static List<Result> getMostRelevantDocumentToQuery(Dictionary dictionary, DocumentValues query, int mostRelevantDocumentsCount) {
         Map<String, DocumentValues> documentValues = dictionary.getDocumentValues();
 

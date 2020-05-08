@@ -16,5 +16,11 @@ import java.util.List;
  * Metodu search implementujte ve tříde {@link Index}
  */
 public interface Searcher {
+
+    /**
+     * Metoda pro hledání v dokumentech.
+     * @param query - Query.
+     * @return List výsledků nejvíce relevantních k zadané query.
+     */
     List<Result> search(String query);
 }

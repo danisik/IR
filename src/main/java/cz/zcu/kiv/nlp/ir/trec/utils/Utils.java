@@ -7,13 +7,22 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 
+/**
+ * Třída pomocných metod.
+ */
 public class Utils {
 
-    public static double roundDoubleNumber(double number) {
-        return Math.floor(number * Constants.ROUNDING_NUMBER) / Constants.ROUNDING_NUMBER;
-    }
-
+    /** Formát pro datum. */
     public static final java.text.DateFormat SDF = new SimpleDateFormat("yyyy-MM-dd_HH_mm_SS");
+
+    /**
+     * Zaokrouhlení float čísla na počet desetinných míst.
+     * @param number - Nezaokrouhlené číslo.
+     * @return Zaokrouhlené číslo.
+     */
+    public static float roundDoubleNumber(float number) {
+        return (float) Math.floor(number * Constants.ROUNDING_NUMBER) / Constants.ROUNDING_NUMBER;
+    }
 
     /**
      * Saves text to given file.
@@ -49,6 +58,11 @@ public class Utils {
         }
     }
 
+    /**
+     * Metoda pro načítání String obsahu ze souboru.
+     * @param file - Soubor ze kterého se čte.
+     * @return List řádků.
+     */
     public static ArrayList<String> readFromFile(String file) {
         ArrayList<String> lines = new ArrayList<String>();
         try {

@@ -1,5 +1,8 @@
 package cz.zcu.kiv.nlp.ir.trec.data.document.crawlered;
 
+/**
+ * Třída obsahující parametry budovy pro CrawleredDocument.
+ */
 public class PropertyParameters {
 
     private String areaUsable = "";
