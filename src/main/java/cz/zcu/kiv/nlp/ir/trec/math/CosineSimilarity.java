@@ -20,7 +20,7 @@ public class CosineSimilarity {
      * @param queryValues - Query values.
      * @return Scalar product.
      */
-    public static float computeScalarProduct(Map<String, DocumentWordValues> documentValues, Map<String, DocumentWordValues> queryValues) {
+    private static float computeScalarProduct(Map<String, DocumentWordValues> documentValues, Map<String, DocumentWordValues> queryValues) {
 
         float scalarProduct = 0;
 
@@ -39,12 +39,10 @@ public class CosineSimilarity {
      * @param query - Query.
      * @return Cosinova podobnost.
      */
-    public static float computeCosineSimilarity(DocumentValues document, DocumentValues query) {
+    private static float computeCosineSimilarity(DocumentValues document, DocumentValues query) {
         float scalarProduct = computeScalarProduct(document.getWordValues(), query.getWordValues());
 
-        float cosineSimilarity = (scalarProduct) / (document.getEuclidStandard() * query.getEuclidStandard());
-
-        return cosineSimilarity;
+        return (scalarProduct) / (document.getEuclidStandard() * query.getEuclidStandard());
     }
 
     /**
@@ -61,14 +59,17 @@ public class CosineSimilarity {
             return null;
         }
 
-        // Compute cosine similarity for every document-query pair.
+        // Get all documents, which contains at least one word as query.
+        Set<String> documentIDs = dictionary.getDocumentIDsForQuery(query);
+
+        // Compute cosine similarity for document-query pair.
         List<Result> allRecords = new ArrayList<>();
-        for (String documentId : documentValues.keySet()) {
-            DocumentValues document = documentValues.get(documentId);
-            allRecords.add(new ResultImpl(documentId, computeCosineSimilarity(document, query)));
+        for (String documentID : documentIDs) {
+            DocumentValues document = documentValues.get(documentID);
+            allRecords.add(new ResultImpl(documentID, computeCosineSimilarity(document, query)));
         }
 
-        Collections.sort(allRecords, new ResultComparator());
+        allRecords.sort(new ResultComparator());
 
         // Get most relevant documents.
         List<Result> mostRelevantDocuments = allRecords.subList(0, mostRelevantDocumentsCount);

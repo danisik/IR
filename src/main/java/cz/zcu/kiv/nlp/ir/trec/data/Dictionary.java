@@ -1,6 +1,7 @@
 package cz.zcu.kiv.nlp.ir.trec.data;
 
 import cz.zcu.kiv.nlp.ir.trec.data.document.DocumentValues;
+import cz.zcu.kiv.nlp.ir.trec.data.document.DocumentWordValues;
 import cz.zcu.kiv.nlp.ir.trec.math.TFIDF;
 
 import java.io.Serializable;
@@ -13,8 +14,10 @@ public class Dictionary implements Serializable {
 
     /** Invertovaný index. */
     private Map<String, Set<String>> invertedIndex;
+
     /** Seznam všech slov ve slovníku. */
     private Map<String, Float> words;
+
     /** Seznam hodnot dokumentů podle documentId. */
     private Map<String, DocumentValues> documentValues;
 
@@ -81,6 +84,18 @@ public class Dictionary implements Serializable {
             documentValues.put(documentId, new DocumentValues());
         }
         documentValues.get(documentId).addWord(word);
+    }
+
+    public Set<String> getDocumentIDsForQuery(DocumentValues query) {
+
+        Set<String> documentIDs = new HashSet<>();
+
+        Map<String, DocumentWordValues> queryWords = query.getWordValues();
+        for (String word : queryWords.keySet()) {
+            documentIDs.addAll(invertedIndex.get(word));
+        }
+
+        return documentIDs;
     }
 
     /**

@@ -3,11 +3,14 @@ package cz.zcu.kiv.nlp.ir.trec;
 import cz.zcu.kiv.nlp.ir.trec.data.*;
 import cz.zcu.kiv.nlp.ir.trec.data.document.Document;
 import cz.zcu.kiv.nlp.ir.trec.data.document.crawlered.CrawleredDocument;
+import cz.zcu.kiv.nlp.ir.trec.data.enums.EDataType;
+import cz.zcu.kiv.nlp.ir.trec.data.enums.ESearchType;
 import cz.zcu.kiv.nlp.ir.trec.data.result.Result;
 import cz.zcu.kiv.nlp.ir.trec.indexer.Index;
 import cz.zcu.kiv.nlp.ir.trec.stemmer.CzechStemmerAgressive;
 import cz.zcu.kiv.nlp.ir.trec.tokenizer.AdvancedTokenizer;
 import org.apache.log4j.*;
+import org.apache.lucene.analysis.cz.CzechAnalyzer;
 
 import java.io.*;
 import java.util.*;
@@ -23,7 +26,7 @@ public class TestTrecEval {
 
     private static Logger log = Logger.getLogger(TestTrecEval.class);
     private static final String OUTPUT_DIR = "./TREC";
-    private static final EDataType dataType = EDataType.CRAWLERED;
+    private static EDataType dataType = null;
     private static Index index;
     private static List<Document> documents;
 
@@ -43,38 +46,66 @@ public class TestTrecEval {
     public static void main(String args[]) throws Exception {
         configureLogger();
 
-        index = new Index(new CzechStemmerAgressive(), new AdvancedTokenizer(Constants.FILENAME_STOPWORDS),
-                false, true, true, (short)10);
+        // Init indexer.
+        index = new Index(new CzechStemmerAgressive(), new AdvancedTokenizer(Constants.FILENAME_STOPWORDS), new CzechAnalyzer(),
+                "title", false, true, true, (short)10);
+
+        // Set default options.
+        index.setSearchType(ESearchType.SVM);
+        dataType = EDataType.CRAWLERED;
 
         String indexedDataFilename = "";
 
         log.info("Load " + dataType.toString() + " documents.");
-        if (dataType == EDataType.CUSTOM) {
-            documents = DataLoader.loadDocumentsFromSchool(OUTPUT_DIR + "/czechData.bin");
-            indexedDataFilename = Constants.FILENAME_DATA_INDEX_CUSTOM;
+        switch(dataType) {
+            // Načtení školních dokumentů.
+            case CUSTOM:
+                documents = DataLoader.loadDocumentsFromSchool(OUTPUT_DIR + "/czechData.bin");
+                indexedDataFilename = Constants.FILENAME_DATA_INDEX_CUSTOM;
+                break;
+
+            // Načtení stažených dat.
+            case CRAWLERED:
+                documents = DataLoader.loadCrawleredData(Constants.FILENAME_CUSTOM_DATA);
+                indexedDataFilename = Constants.FILENAME_DATA_INDEX_CRAWLERED;
+                break;
+
+            // Default.
+            default:
+                break;
         }
-        else if (dataType == EDataType.CRAWLERED){
-            documents = DataLoader.loadCrawleredData(Constants.FILENAME_CUSTOM_DATA);
-            indexedDataFilename = Constants.FILENAME_DATA_INDEX_CRAWLERED;
-        }
+
         log.info("Documents count: " + documents.size());
 
-        /*
+
+        // Načtení indexovaných dat.
         if (!index.loadIndexedData(indexedDataFilename)) {
+
+            // Indexace dat.
             index.index(documents);
+
+            // Uložení indexovaných dat.
             index.saveIndexedData(indexedDataFilename);
         }
-         */
 
-        index.index(documents);
 
-        if (dataType == EDataType.CUSTOM) {
-            searchInDocumentsFromSchool();
+        //index.index(documents);
+
+        switch(dataType) {
+            // Načtení školních dokumentů.
+            case CUSTOM:
+                searchInDocumentsFromSchool();
+                break;
+
+            // Načtení stažených dat.
+            case CRAWLERED:
+                searchInCrawleredDocuments();
+                break;
+
+            // Default.
+            default:
+                break;
         }
-        else if (dataType == EDataType.CRAWLERED){
-            searchInCrawleredDocuments();
-        }
-
     }
 
     private static void searchInDocumentsFromSchool() {
@@ -115,7 +146,18 @@ public class TestTrecEval {
     }
 
     private static void searchInCrawleredDocuments() {
-        String query = "Prodej chalupy 2+1 s pozemkem o celkové výměře 2033";
+        String query = "";
+
+        // TODO: delete in final version.
+        switch (index.getSearchType()) {
+            case BOOLEAN:
+                query = "((title:beta AND name:alfa) OR title:c) OR title:\"gamma beta\"";
+                break;
+            case SVM:
+                query = "Prodej chalupy 2+1 s pozemkem o celkové výměře 2033";
+                break;
+        }
+
         long startTime = System.currentTimeMillis();
         List<Result> resultHits = index.search(query);
         long estimatedTime = System.currentTimeMillis() - startTime;

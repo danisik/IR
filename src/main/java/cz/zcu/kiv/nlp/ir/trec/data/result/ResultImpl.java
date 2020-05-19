@@ -7,20 +7,10 @@ package cz.zcu.kiv.nlp.ir.trec.data.result;
  * Třídu můžete libovolně upravovat, popř. si můžete vytvořit vlastní třídu,
  * která dědí od abstraktní třídy {@link AbstractResult}
  */
-public class ResultImpl extends AbstractResult implements Comparable<ResultImpl> {
+public class ResultImpl extends AbstractResult {
 
     public ResultImpl(String documentID, float score) {
         this.setDocumentID(documentID);
         this.setScore(score);
-    }
-
-    @Override
-    public int compareTo(ResultImpl cosineSimilarityRecord) {
-        if (this.getScore() > cosineSimilarityRecord.getScore()) {
-            return -1;
-        }
-        else {
-            return 1;
-        }
     }
 }

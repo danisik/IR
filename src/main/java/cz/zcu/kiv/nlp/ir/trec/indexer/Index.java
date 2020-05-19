@@ -5,12 +5,21 @@ import cz.zcu.kiv.nlp.ir.trec.data.*;
 import cz.zcu.kiv.nlp.ir.trec.data.document.Document;
 import cz.zcu.kiv.nlp.ir.trec.data.document.DocumentValues;
 import cz.zcu.kiv.nlp.ir.trec.data.document.DocumentWordValues;
+import cz.zcu.kiv.nlp.ir.trec.data.enums.ESearchType;
 import cz.zcu.kiv.nlp.ir.trec.data.result.Result;
 import cz.zcu.kiv.nlp.ir.trec.math.CosineSimilarity;
 import cz.zcu.kiv.nlp.ir.trec.math.TFIDF;
 import cz.zcu.kiv.nlp.ir.trec.stemmer.Stemmer;
 import cz.zcu.kiv.nlp.ir.trec.tokenizer.Tokenizer;
 import org.apache.log4j.Logger;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.WildcardQuery;
+
 
 import java.io.*;
 import java.util.ArrayList;
@@ -40,6 +49,7 @@ public class Index implements Indexer, Searcher {
     private boolean removeAccentsAfterStemming;
     private boolean toLowercase;
     private short mostRelevantDocumentsCount;
+    private QueryParser parser;
 
     private ESearchType searchType;
 
@@ -47,12 +57,15 @@ public class Index implements Indexer, Searcher {
      * Constructor.
      * @param stemmer - Použitý stemmer.
      * @param tokenizer - Použitý tokenizer.
+     * @param analyzer - Použitý analyzer.
+     * @param defaultField - Základní field, ve kterém se bude hledat.
      * @param removeAccentsBeforeStemming - Pokud true, smaže diakritiku před stemmerem.
      * @param removeAccentsAfterStemming - Pokud true, smaže diakritiku po stemmeru.
      * @param toLowercase - Pokud true, tak všechny znaky převede do lowercase.
      * @param mostRelevantDocumentsCount - Počet dokumentů, kteří jsou nejvíce relevantní k dotazu.
      */
-    public Index(Stemmer stemmer, Tokenizer tokenizer, boolean removeAccentsBeforeStemming, boolean removeAccentsAfterStemming, boolean toLowercase, short mostRelevantDocumentsCount) {
+    public Index(Stemmer stemmer, Tokenizer tokenizer, Analyzer analyzer, String defaultField, boolean removeAccentsBeforeStemming,
+                 boolean removeAccentsAfterStemming, boolean toLowercase, short mostRelevantDocumentsCount) {
         this.dictionary = new Dictionary();
         this.stemmer = stemmer;
         this.tokenizer = tokenizer;
@@ -63,6 +76,8 @@ public class Index implements Indexer, Searcher {
 
         // Default search type.
         this.searchType = ESearchType.SVM;
+
+        this.parser = new QueryParser(defaultField, analyzer);
 
         log.info("Stemmer: " + stemmer.getClass().getSimpleName());
         log.info("Tokenizer: " + tokenizer.getClass().getSimpleName());
@@ -77,6 +92,13 @@ public class Index implements Indexer, Searcher {
      * @param documents list dokumentů
      */
     public void index(List<Document> documents) {
+        int documentsCount = documents.size();
+
+        if (documentsCount == 0) {
+            log.info("List of documents did not contain single document !");
+            return;
+        }
+
         long startTime = System.currentTimeMillis();
         log.info("Start indexing.");
 
@@ -121,15 +143,15 @@ public class Index implements Indexer, Searcher {
                 dictionary.addDocumentWord(documentId, word);
             }
         }
-        long estimatedTime = System.currentTimeMillis() - startTime;
-        log.info("Indexing done after " + (double)estimatedTime / 1000 + " seconds");
 
-        int documentsCount = documents.size();
         // Calculating IDF for dictionary.
         dictionary.calculateIDF(documentsCount);
 
         // Calculating TFIDF for every word in every document.
         calculateDocumentsWordsTFIDF(documents);
+
+        long estimatedTime = System.currentTimeMillis() - startTime;
+        log.info("Indexing done after " + (double)estimatedTime / 1000 + " seconds");
     }
 
     /**
@@ -138,7 +160,7 @@ public class Index implements Indexer, Searcher {
      * @return List výsledků nejvíce relevantních k zadané query.
      */
     public List<Result> search(String query) {
-        List<Result> results = null;
+        List<Result> results = new ArrayList<>();
 
         switch(searchType) {
             // SVM searching.
@@ -161,6 +183,25 @@ public class Index implements Indexer, Searcher {
 
             // BOOLEAN searching.
             case BOOLEAN:
+                Query q;
+                try {
+                    q = parser.parse(query);
+                } catch (ParseException e) {
+                    log.warn("Query '" + query + "' is not valid query!");
+                    break;
+                }
+
+                if (q instanceof TermQuery) {
+
+                }
+                else if (q instanceof BooleanQuery) {
+
+                }
+                else {
+                    log.warn("Unsupported query type !");
+                    break;
+                }
+
                 break;
 
             // Default.
@@ -208,12 +249,19 @@ public class Index implements Indexer, Searcher {
      * @return True pokud načítání proběhlo úspěšně.
      */
     public boolean loadIndexedData(String filename) {
+        log.info("Loading indexed data.");
         try {
+            long startTime = System.currentTimeMillis();
+
             FileInputStream fin = new FileInputStream(filename);
-            ObjectInputStream ois = new ObjectInputStream(fin);
+            BufferedInputStream bis = new BufferedInputStream(fin);
+            ObjectInputStream ois = new ObjectInputStream(bis);
             this.dictionary = (Dictionary) ois.readObject();
             ois.close();
-            log.info("Indexed data was loaded successfully from file '" + filename + "'.");
+
+            long estimatedTime = System.currentTimeMillis() - startTime;
+
+            log.info("Indexed data was loaded successfully from file '" + filename + "' after " + (double)estimatedTime / 1000 + " seconds.");
             return true;
         } catch (FileNotFoundException e) {
             log.warn("File '" + filename + "' for indexed data was not found!");
@@ -233,12 +281,19 @@ public class Index implements Indexer, Searcher {
      * @return True pokud ukládání proběhlo úspěšně.
      */
     public boolean saveIndexedData(String filename) {
+        log.info("Saving indexed data.");
         try {
+            long startTime = System.currentTimeMillis();
+
             FileOutputStream fout = new FileOutputStream(filename);
-            ObjectOutputStream oos = new ObjectOutputStream(fout);
+            BufferedOutputStream bos = new BufferedOutputStream(fout);
+            ObjectOutputStream oos = new ObjectOutputStream(bos);
             oos.writeObject(this.dictionary);
             oos.close();
-            log.info("Saving indexed data into file '" + filename + "' was successful.");
+
+            long estimatedTime = System.currentTimeMillis() - startTime;
+            log.info("Saving indexed data into file '" + filename + "' was successful after " + (double)estimatedTime / 1000 + " seconds.");
+
             return true;
         } catch (Exception e) {
             log.warn("Saving indexed data into file '" + filename + "'  was unsuccessful!");
@@ -281,5 +336,10 @@ public class Index implements Indexer, Searcher {
      */
     public void setSearchType(ESearchType searchType) {
         this.searchType = searchType;
+    }
+
+    // TODO: delete in final version.
+    public ESearchType getSearchType() {
+        return searchType;
     }
 }
