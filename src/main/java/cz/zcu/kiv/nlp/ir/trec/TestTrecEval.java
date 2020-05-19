@@ -25,7 +25,6 @@ import java.util.*;
 public class TestTrecEval {
 
     private static Logger log = Logger.getLogger(TestTrecEval.class);
-    private static final String OUTPUT_DIR = "./TREC";
     private static EDataType dataType = null;
     private static Index index;
     private static List<Document> documents;
@@ -60,13 +59,13 @@ public class TestTrecEval {
         switch(dataType) {
             // Načtení školních dokumentů.
             case CUSTOM:
-                documents = DataLoader.loadDocumentsFromSchool(OUTPUT_DIR + "/czechData.bin");
+                documents = DataLoader.loadDocumentsFromSchool(Constants.FILENAME_CUSTOM_DATA);
                 indexedDataFilename = Constants.FILENAME_DATA_INDEX_CUSTOM;
                 break;
 
             // Načtení stažených dat.
             case CRAWLERED:
-                documents = DataLoader.loadCrawleredData(Constants.FILENAME_CUSTOM_DATA);
+                documents = DataLoader.loadCrawleredData(Constants.FILENAME_CRAWLERED_DATA);
                 indexedDataFilename = Constants.FILENAME_DATA_INDEX_CRAWLERED;
                 break;
 
@@ -77,7 +76,6 @@ public class TestTrecEval {
 
         log.info("Documents count: " + documents.size());
 
-
         // Načtení indexovaných dat.
         if (!index.loadIndexedData(indexedDataFilename)) {
 
@@ -87,9 +85,6 @@ public class TestTrecEval {
             // Uložení indexovaných dat.
             index.saveIndexedData(indexedDataFilename);
         }
-
-
-        //index.index(documents);
 
         switch(dataType) {
             // Načtení školních dokumentů.
@@ -110,7 +105,7 @@ public class TestTrecEval {
 
     private static void searchInDocumentsFromSchool() {
         List<String> lines = new ArrayList<>();
-        List<Topic> topics = SerializedDataHelper.loadTopic(new File(OUTPUT_DIR + "/topicData.bin"));
+        List<Topic> topics = SerializedDataHelper.loadTopic(new File(Constants.FILENAME_TOPIC_DATA));
 
         for (Topic t : topics) {
             log.info("Start searching.");
@@ -135,7 +130,7 @@ public class TestTrecEval {
             System.out.println();
         }
 
-        final File outputFile = new File(OUTPUT_DIR + "/results " + SerializedDataHelper.SDF.format(System.currentTimeMillis()) + ".txt");
+        final File outputFile = new File(Constants.OUTPUT_DIR + "/results " + SerializedDataHelper.SDF.format(System.currentTimeMillis()) + ".txt");
         IOUtils.saveFile(outputFile, lines);
         //try to run evaluation
         try {
@@ -220,13 +215,13 @@ public class TestTrecEval {
         BasicConfigurator.resetConfiguration();
         BasicConfigurator.configure();
 
-        File results = new File(OUTPUT_DIR);
+        File results = new File(Constants.OUTPUT_DIR);
         if (!results.exists()) {
             results.mkdir();
         }
 
         try {
-            Appender appender = new WriterAppender(new PatternLayout(), new FileOutputStream(new File(OUTPUT_DIR + "/" + SerializedDataHelper.SDF.format(System.currentTimeMillis()) + " - " + ".log"), false));
+            Appender appender = new WriterAppender(new PatternLayout(), new FileOutputStream(new File(Constants.OUTPUT_DIR + "/" + SerializedDataHelper.SDF.format(System.currentTimeMillis()) + " - " + ".log"), false));
             BasicConfigurator.configure(appender);
         } catch (IOException e) {
             e.printStackTrace();
