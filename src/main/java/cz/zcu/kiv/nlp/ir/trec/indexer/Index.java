@@ -1,7 +1,9 @@
 package cz.zcu.kiv.nlp.ir.trec.indexer;
 
 import cz.zcu.kiv.nlp.ir.trec.Searcher;
-import cz.zcu.kiv.nlp.ir.trec.data.*;
+import cz.zcu.kiv.nlp.ir.trec.data.Constants;
+import cz.zcu.kiv.nlp.ir.trec.data.dictionary.Dictionary;
+import cz.zcu.kiv.nlp.ir.trec.data.dictionary.WordValues;
 import cz.zcu.kiv.nlp.ir.trec.data.document.Document;
 import cz.zcu.kiv.nlp.ir.trec.data.document.DocumentValues;
 import cz.zcu.kiv.nlp.ir.trec.data.document.DocumentWordValues;
@@ -18,7 +20,6 @@ import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.WildcardQuery;
 
 
 import java.io.*;
@@ -228,14 +229,14 @@ public class Index implements Indexer, Searcher {
      * @param documentValues - Hodnoty dokumentu.
      */
     private void calculateDocumentWordsTFIDF(DocumentValues documentValues) {
-        Map<String, Float> wordsWithIDF = dictionary.getWords();
+        Map<String, WordValues> wordsWithIDF = dictionary.getWords();
         Map<String, DocumentWordValues> documentWords = documentValues.getWordValues();
 
         // TODO: indonesz -> hází error, zřejmě není ve slovníku ??
         float euclidStandard = 0;
         for (String word : documentWords.keySet()) {
             DocumentWordValues documentWordValues = documentWords.get(word);
-            float tfidf = TFIDF.calculateTFIDF(documentWordValues.getTf(), wordsWithIDF.get(word));
+            float tfidf = TFIDF.calculateTFIDF(documentWordValues.getTf(), wordsWithIDF.get(word).getIdf());
             documentWordValues.setTfidf(tfidf);
             euclidStandard += Math.pow(tfidf, 2);
         }
@@ -254,7 +255,7 @@ public class Index implements Indexer, Searcher {
             long startTime = System.currentTimeMillis();
 
             FileInputStream fin = new FileInputStream(filename);
-            BufferedInputStream bis = new BufferedInputStream(fin);
+            BufferedInputStream bis = new BufferedInputStream(fin, Constants.BUFFER_STREAM_SIZE);
             ObjectInputStream ois = new ObjectInputStream(bis);
             this.dictionary = (Dictionary) ois.readObject();
             ois.close();
@@ -286,7 +287,7 @@ public class Index implements Indexer, Searcher {
             long startTime = System.currentTimeMillis();
 
             FileOutputStream fout = new FileOutputStream(filename);
-            BufferedOutputStream bos = new BufferedOutputStream(fout);
+            BufferedOutputStream bos = new BufferedOutputStream(fout, Constants.BUFFER_STREAM_SIZE);
             ObjectOutputStream oos = new ObjectOutputStream(bos);
             oos.writeObject(this.dictionary);
             oos.close();

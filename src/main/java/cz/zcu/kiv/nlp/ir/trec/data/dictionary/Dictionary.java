@@ -1,4 +1,4 @@
-package cz.zcu.kiv.nlp.ir.trec.data;
+package cz.zcu.kiv.nlp.ir.trec.data.dictionary;
 
 import cz.zcu.kiv.nlp.ir.trec.data.document.DocumentValues;
 import cz.zcu.kiv.nlp.ir.trec.data.document.DocumentWordValues;
@@ -12,11 +12,8 @@ import java.util.*;
  */
 public class Dictionary implements Serializable {
 
-    /** Invertovaný index. */
-    private Map<String, Set<String>> invertedIndex;
-
     /** Seznam všech slov ve slovníku. */
-    private Map<String, Float> words;
+    private Map<String, WordValues> words;
 
     /** Seznam hodnot dokumentů podle documentId. */
     private Map<String, DocumentValues> documentValues;
@@ -28,7 +25,6 @@ public class Dictionary implements Serializable {
      */
     public Dictionary() {
         this.words = new HashMap<>();
-        this.invertedIndex = new HashMap<>();
         this.documentValues = new HashMap<>();
     }
 
@@ -37,7 +33,7 @@ public class Dictionary implements Serializable {
      * @param word - Slovo.
      */
     public void addWord(String word) {
-        this.words.put(word, (float) 0);
+        this.words.put(word, new WordValues());
     }
 
     /**
@@ -46,7 +42,7 @@ public class Dictionary implements Serializable {
      * @return True pokud se slovo nachází ve slovníku.
      */
     public boolean containsWord(String word) {
-        return words.containsKey(word);
+        return this.words.containsKey(word);
     }
 
     /**
@@ -55,11 +51,7 @@ public class Dictionary implements Serializable {
      * @param documentId - Id dokumentu.
      */
     public void addDocumentId(String word, String documentId) {
-
-        if (!invertedIndex.containsKey(word)) {
-            invertedIndex.put(word, new HashSet<>());
-        }
-        invertedIndex.get(word).add(documentId);
+        this.words.get(word).addDocumentID(documentId);
     }
 
     /**
@@ -68,9 +60,10 @@ public class Dictionary implements Serializable {
      */
     public void calculateIDF(int documentsCount) {
         for (String word : words.keySet()) {
-            Set<String> set = invertedIndex.get(word);
+            WordValues wordValues = words.get(word);
+            Set<String> set = wordValues.getDocumentIDs();
             int df = set.size();
-            words.put(word, TFIDF.calculateIDF(documentsCount, df));
+            wordValues.setIdf(TFIDF.calculateIDF(documentsCount, df));
         }
     }
 
@@ -92,7 +85,7 @@ public class Dictionary implements Serializable {
 
         Map<String, DocumentWordValues> queryWords = query.getWordValues();
         for (String word : queryWords.keySet()) {
-            documentIDs.addAll(invertedIndex.get(word));
+            documentIDs.addAll(words.get(word).getDocumentIDs());
         }
 
         return documentIDs;
@@ -102,7 +95,7 @@ public class Dictionary implements Serializable {
      * Metoda pro získání slovníku slov.
      * @return Slovník slov.
      */
-    public Map<String, Float> getWords() {
+    public Map<String, WordValues> getWords() {
         return words;
     }
 

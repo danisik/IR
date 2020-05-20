@@ -1,6 +1,6 @@
 package cz.zcu.kiv.nlp.ir.trec.math;
 
-import cz.zcu.kiv.nlp.ir.trec.data.Dictionary;
+import cz.zcu.kiv.nlp.ir.trec.data.dictionary.Dictionary;
 import cz.zcu.kiv.nlp.ir.trec.data.document.DocumentValues;
 import cz.zcu.kiv.nlp.ir.trec.data.document.DocumentWordValues;
 import cz.zcu.kiv.nlp.ir.trec.data.result.Result;

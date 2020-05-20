@@ -24,6 +24,8 @@ public class Constants {
 
     /** Číslo pro zaokrouhlování. */
     public static final int ROUNDING_NUMBER = 10000;
+    /** Velikost bufferů pro načítání / ukládání objektů. */
+    public static final int BUFFER_STREAM_SIZE = 16 * 1024 * 1024;
 
     /** Prefix pro Id dokumentu. */
     public static final String DOCUMENT_ID_PREFIX = "d";
