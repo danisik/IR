@@ -24,6 +24,13 @@ public interface Indexer {
     void index(List<Document> documents);
 
     /**
+     * Metoda zaindexuje jeden dokument
+     *
+     * @param document - Dokument k zaindexování.
+     */
+    void index(Document document);
+
+    /**
      * Metoda načte indexovaná data ze souboru.
      * @param filename - Název souboru.
      * @return True pokud načítání proběhlo úspěšně.

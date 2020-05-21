@@ -50,8 +50,8 @@ public class TestTrecEval {
                 "title", false, true, true, (short)10);
 
         // Set default options.
-        index.setSearchType(ESearchType.BOOLEAN);
-        dataType = EDataType.CUSTOM;
+        index.setSearchType(ESearchType.SVM);
+        dataType = EDataType.CRAWLERED;
 
         String indexedDataFilename = "";
 
@@ -146,7 +146,7 @@ public class TestTrecEval {
         // TODO: delete in final version.
         switch (index.getSearchType()) {
             case BOOLEAN:
-                query = "((title:beta AND name:alfa) OR title:c) OR title:\"gamma beta\"";
+                query = "((title:beta AND name:alfa) OR title:c) OR title:gamma";
                 break;
             case SVM:
                 query = "Prodej chalupy 2+1 s pozemkem o celkové výměře 2033";

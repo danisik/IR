@@ -15,8 +15,10 @@ import cz.zcu.kiv.nlp.ir.trec.stemmer.Stemmer;
 import cz.zcu.kiv.nlp.ir.trec.tokenizer.Tokenizer;
 import org.apache.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
@@ -105,54 +107,84 @@ public class Index implements Indexer, Searcher {
 
         // Iterate through every document.
         for (Document document : documents) {
-            String documentId = document.getId();
-
-            // Get line of text of specific documents attributes.
-            String line = document.getDataForPreprocessing();
-
-            // Lowercase line if set.
-            if (toLowercase) {
-                line.toLowerCase();
-            }
-
-            // Remove accents before stemming if sets.
-            if (removeAccentsBeforeStemming) {
-                line = tokenizer.removeAccents(line);
-            }
-
-            // Get words with tokenizer.
-            ArrayList<String> words = tokenizer.tokenize(line);
-            for (String word : words) {
-
-                // Apply stemmer if created.
-                if (stemmer != null) {
-                    word = stemmer.stem(word);
-                }
-
-                // Remove accents after stemming if sets.
-                if (removeAccentsAfterStemming) {
-                    word = tokenizer.removeAccents(word);
-                }
-
-                // Add word into dictionary if not presented.
-                if (!dictionary.containsWord(word)) {
-                    dictionary.addWord(word);
-                }
-                // Add document id for specific word.
-                dictionary.addDocumentId(word, documentId);
-                // Add word into document's dictionary.
-                dictionary.addDocumentWord(documentId, word);
-            }
+            indexSingleDocument(document);
         }
 
         // Calculating IDF for dictionary.
-        dictionary.calculateIDF(documentsCount);
+        dictionary.calculateIDF();
 
         // Calculating TFIDF for every word in every document.
-        calculateDocumentsWordsTFIDF(documents);
+        calculateDocumentsWordsTFIDF();
 
         long estimatedTime = System.currentTimeMillis() - startTime;
         log.info("Indexing done after " + (double)estimatedTime / 1000 + " seconds");
+    }
+
+    /**
+     * Metoda zaindexuje jeden dokument
+     *
+     * @param document - Dokument k zaindexování.
+     */
+    public void index(Document document) {
+        long startTime = System.currentTimeMillis();
+        log.info("Start indexing.");
+
+        // Index single document.
+        indexSingleDocument(document);
+
+        // Calculating IDF for dictionary.
+        dictionary.calculateIDF();
+
+        // Calculating TFIDF for every word in every document.
+        calculateDocumentsWordsTFIDF();
+
+        long estimatedTime = System.currentTimeMillis() - startTime;
+        log.info("Indexing done after " + (double)estimatedTime / 1000 + " seconds");
+    }
+
+    /**
+     * Metoda zaindexuje zadaný dokument do dictionary.
+     * @param document - Dokument k zaindexování.
+     */
+    private void indexSingleDocument(Document document) {
+        String documentId = document.getId();
+
+        // Get line of text of specific documents attributes.
+        String line = document.getDataForPreprocessing();
+
+        // Lowercase line if set.
+        if (toLowercase) {
+            line.toLowerCase();
+        }
+
+        // Remove accents before stemming if sets.
+        if (removeAccentsBeforeStemming) {
+            line = tokenizer.removeAccents(line);
+        }
+
+        // Get words with tokenizer.
+        ArrayList<String> words = tokenizer.tokenize(line);
+        for (String word : words) {
+
+            // Apply stemmer if created.
+            if (stemmer != null) {
+                word = stemmer.stem(word);
+            }
+
+            // Remove accents after stemming if sets.
+            if (removeAccentsAfterStemming) {
+                word = tokenizer.removeAccents(word);
+            }
+
+            // Add word into dictionary if not presented.
+            if (!dictionary.containsWord(word)) {
+                dictionary.addWord(word);
+            }
+            // Add document id for specific word.
+            dictionary.addDocumentId(word, documentId);
+            // Add word into document's dictionary.
+            dictionary.addDocumentWord(documentId, word);
+        }
     }
 
     /**
@@ -178,7 +210,7 @@ public class Index implements Indexer, Searcher {
                 // Calculate tfidf for query words.
                 calculateDocumentWordsTFIDF(indexedQuery);
 
-                // Compare cosine similarities and reutnr most relevant documents.
+                // Compare cosine similarities and return most relevant documents.
                 results = CosineSimilarity.getMostRelevantDocumentToQuery(dictionary, indexedQuery, mostRelevantDocumentsCount);
                 break;
 
@@ -191,6 +223,12 @@ public class Index implements Indexer, Searcher {
                     log.warn("Query '" + query + "' is not valid query!");
                     break;
                 }
+
+                BooleanClause clause = ((BooleanQuery) q).clauses().get(1);
+                TermQuery query2 = (TermQuery) clause.getQuery();
+                Term term = query2.getTerm();
+                String text = term.text();
+                String field = term.field();
 
                 if (q instanceof TermQuery) {
 
@@ -215,11 +253,12 @@ public class Index implements Indexer, Searcher {
 
     /**
      * Metoda vypočítá tfidf hodnotu pro všechny dokumenty.
-     * @param documents - Dokumenty.
      */
-    private void calculateDocumentsWordsTFIDF(List<Document> documents) {
-        for (Document document : documents) {
-            DocumentValues documentValues = dictionary.getDocumentValuesById(document.getId());
+    private void calculateDocumentsWordsTFIDF() {
+        Map<String, DocumentValues> documentValuesMap = this.dictionary.getDocumentValues();
+
+        for (String documentID : documentValuesMap.keySet()) {
+            DocumentValues documentValues = dictionary.getDocumentValuesById(documentID);
             calculateDocumentWordsTFIDF(documentValues);
         }
     }

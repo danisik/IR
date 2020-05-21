@@ -56,9 +56,10 @@ public class Dictionary implements Serializable {
 
     /**
      * Spočítání IDF pro dané slovo ve slovníku.
-     * @param documentsCount - Počet všech dokumentů.
      */
-    public void calculateIDF(int documentsCount) {
+    public void calculateIDF() {
+        int documentsCount = documentValues.size();
+
         for (String word : words.keySet()) {
             WordValues wordValues = words.get(word);
             Set<String> set = wordValues.getDocumentIDs();
