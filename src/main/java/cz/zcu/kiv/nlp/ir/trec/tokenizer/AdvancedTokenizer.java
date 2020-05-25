@@ -84,7 +84,6 @@ public class AdvancedTokenizer implements Tokenizer {
         while (matcher.find()) {
             int start = matcher.start();
             int end = matcher.end();
-
             String word = text.substring(start, end);
             if (!stopwords.contains(word) && word.length() > 0) words.add(word);
         }
@@ -109,5 +108,14 @@ public class AdvancedTokenizer implements Tokenizer {
     @Override
     public ArrayList<String> tokenize(String text) {
         return tokenize(text, defaultRegex);
+    }
+
+    /**
+     * Vrať všechny stopwords.
+     * @return List stopwords.
+     */
+    @Override
+    public List<String> getStopWords() {
+        return stopwords;
     }
 }

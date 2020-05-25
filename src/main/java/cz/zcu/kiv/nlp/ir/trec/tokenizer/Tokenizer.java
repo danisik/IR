@@ -1,6 +1,7 @@
 package cz.zcu.kiv.nlp.ir.trec.tokenizer;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by tigi on 29.2.2016.
@@ -20,4 +21,10 @@ public interface Tokenizer {
      * @return Text bez diakritiky.
      */
     String removeAccents(String text);
+
+    /**
+     * Vrať všechny stopwords.
+     * @return List stopwords.
+     */
+    List<String> getStopWords();
 }

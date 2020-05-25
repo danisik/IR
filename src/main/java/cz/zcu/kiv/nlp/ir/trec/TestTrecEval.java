@@ -46,8 +46,8 @@ public class TestTrecEval {
         configureLogger();
 
         // Init indexer.
-        index = new Index(new CzechStemmerAgressive(), new AdvancedTokenizer(Constants.FILENAME_STOPWORDS), new CzechAnalyzer(),
-                "title", false, true, true, (short)10);
+        index = new Index(new CzechStemmerAgressive(), new AdvancedTokenizer(Constants.FILENAME_STOPWORDS),
+                "", false, true, true, (short)10);
 
         // Set default options.
         index.setSearchType(ESearchType.SVM);
@@ -146,7 +146,7 @@ public class TestTrecEval {
         // TODO: delete in final version.
         switch (index.getSearchType()) {
             case BOOLEAN:
-                query = "((title:beta AND name:alfa) OR title:c) OR title:gamma";
+                query = "beta AND (alfa OR c) OR gamma";
                 break;
             case SVM:
                 query = "Prodej chalupy 2+1 s pozemkem o celkové výměře 2033";
@@ -170,7 +170,7 @@ public class TestTrecEval {
         System.out.println();
     }
 
-    // TODO: Delete in final version.
+    // TODO: delete in final version.
     private static CrawleredDocument getCrawleredDocument(String id) {
         for (Document document: documents) {
             if (document.getId().equals(id)) return (CrawleredDocument)document;

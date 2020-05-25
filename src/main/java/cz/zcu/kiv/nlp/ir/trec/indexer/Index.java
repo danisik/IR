@@ -15,6 +15,7 @@ import cz.zcu.kiv.nlp.ir.trec.stemmer.Stemmer;
 import cz.zcu.kiv.nlp.ir.trec.tokenizer.Tokenizer;
 import org.apache.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.cz.CzechAnalyzer;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
@@ -60,14 +61,13 @@ public class Index implements Indexer, Searcher {
      * Constructor.
      * @param stemmer - Použitý stemmer.
      * @param tokenizer - Použitý tokenizer.
-     * @param analyzer - Použitý analyzer.
      * @param defaultField - Základní field, ve kterém se bude hledat.
      * @param removeAccentsBeforeStemming - Pokud true, smaže diakritiku před stemmerem.
      * @param removeAccentsAfterStemming - Pokud true, smaže diakritiku po stemmeru.
      * @param toLowercase - Pokud true, tak všechny znaky převede do lowercase.
      * @param mostRelevantDocumentsCount - Počet dokumentů, kteří jsou nejvíce relevantní k dotazu.
      */
-    public Index(Stemmer stemmer, Tokenizer tokenizer, Analyzer analyzer, String defaultField, boolean removeAccentsBeforeStemming,
+    public Index(Stemmer stemmer, Tokenizer tokenizer, String defaultField, boolean removeAccentsBeforeStemming,
                  boolean removeAccentsAfterStemming, boolean toLowercase, short mostRelevantDocumentsCount) {
         this.dictionary = new Dictionary();
         this.stemmer = stemmer;
@@ -80,7 +80,8 @@ public class Index implements Indexer, Searcher {
         // Default search type.
         this.searchType = ESearchType.SVM;
 
-        this.parser = new QueryParser(defaultField, analyzer);
+        // TODO: preprocess query same as normal documents. -> new Analyzer
+        this.parser = new QueryParser(defaultField, new CzechAnalyzer());
 
         log.info("Stemmer: " + stemmer.getClass().getSimpleName());
         log.info("Tokenizer: " + tokenizer.getClass().getSimpleName());
@@ -103,7 +104,7 @@ public class Index implements Indexer, Searcher {
         }
 
         long startTime = System.currentTimeMillis();
-        log.info("Start indexing.");
+        log.info("Start indexing list of " + documentsCount + " documents.");
 
         // Iterate through every document.
         for (Document document : documents) {
@@ -127,7 +128,7 @@ public class Index implements Indexer, Searcher {
      */
     public void index(Document document) {
         long startTime = System.currentTimeMillis();
-        log.info("Start indexing.");
+        log.info("Start indexing single document.");
 
         // Index single document.
         indexSingleDocument(document);
@@ -135,7 +136,7 @@ public class Index implements Indexer, Searcher {
         // Calculating IDF for dictionary.
         dictionary.calculateIDF();
 
-        // Calculating TFIDF for every word in every document.
+        // Calculating TFIDF for every word in document.
         calculateDocumentsWordsTFIDF();
 
         long estimatedTime = System.currentTimeMillis() - startTime;
@@ -152,22 +153,22 @@ public class Index implements Indexer, Searcher {
         // Get line of text of specific documents attributes.
         String line = document.getDataForPreprocessing();
 
-        // Lowercase line if set.
-        if (toLowercase) {
-            line.toLowerCase();
-        }
+                // Lowercase line if set.
+                if (toLowercase) {
+                    line.toLowerCase();
+                }
 
-        // Remove accents before stemming if sets.
-        if (removeAccentsBeforeStemming) {
-            line = tokenizer.removeAccents(line);
-        }
+                // Remove accents before stemming if sets.
+                if (removeAccentsBeforeStemming) {
+                    line = tokenizer.removeAccents(line);
+                }
 
-        // Get words with tokenizer.
-        ArrayList<String> words = tokenizer.tokenize(line);
-        for (String word : words) {
+                // Get words with tokenizer.
+                ArrayList<String> words = tokenizer.tokenize(line);
+                for (String word : words) {
 
-            // Apply stemmer if created.
-            if (stemmer != null) {
+                    // Apply stemmer if created.
+                    if (stemmer != null) {
                 word = stemmer.stem(word);
             }
 
@@ -271,7 +272,7 @@ public class Index implements Indexer, Searcher {
         Map<String, WordValues> wordsWithIDF = dictionary.getWords();
         Map<String, DocumentWordValues> documentWords = documentValues.getWordValues();
 
-        // TODO: indonesz -> hází error, zřejmě není ve slovníku ??
+        // TODO: indonesz -> hází error, zřejmě není ve slovníku ?? - PŘESKOČIT
         float euclidStandard = 0;
         for (String word : documentWords.keySet()) {
             DocumentWordValues documentWordValues = documentWords.get(word);

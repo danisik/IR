@@ -56,7 +56,7 @@ public class CosineSimilarity {
         Map<String, DocumentValues> documentValues = dictionary.getDocumentValues();
 
         if (mostRelevantDocumentsCount > documentValues.size()) {
-            return null;
+            mostRelevantDocumentsCount = documentValues.size();
         }
 
         // Get all documents, which contains at least one word as query.
