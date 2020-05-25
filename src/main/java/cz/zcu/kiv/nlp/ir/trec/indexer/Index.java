@@ -284,10 +284,12 @@ public class Index implements Indexer, Searcher {
         Map<String, WordValues> wordsWithIDF = dictionary.getWords();
         Map<String, DocumentWordValues> documentWords = documentValues.getWordValues();
 
-        // TODO: indonesz -> hází error, zřejmě není ve slovníku ?? - PŘESKOČIT
         float euclidStandard = 0;
         for (String word : documentWords.keySet()) {
             DocumentWordValues documentWordValues = documentWords.get(word);
+
+            if (!wordsWithIDF.containsKey(word)) continue;
+
             float tfidf = TFIDF.calculateTFIDF(documentWordValues.getTf(), wordsWithIDF.get(word).getIdf());
             documentWordValues.setTfidf(tfidf);
             euclidStandard += Math.pow(tfidf, 2);

@@ -75,6 +75,8 @@ public class Dictionary implements Serializable {
 
         Map<String, DocumentWordValues> queryWords = query.getWordValues();
         for (String word : queryWords.keySet()) {
+            if (!words.containsKey(word)) continue;
+
             documentValues.addAll(words.get(word).getDocumentValues());
         }
 
