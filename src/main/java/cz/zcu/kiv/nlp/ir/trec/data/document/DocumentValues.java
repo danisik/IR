@@ -9,6 +9,8 @@ import java.util.Map;
  */
 public class DocumentValues implements Serializable {
 
+    /** ID dokumentu. */
+    private String documentID;
     /** Slovník slov. */
     private Map<String, DocumentWordValues> wordValues;
     /** Střední hodnota. */
@@ -55,4 +57,20 @@ public class DocumentValues implements Serializable {
      * @return - Slovník slov.
      */
     public Map<String, DocumentWordValues> getWordValues() { return  wordValues; }
+
+    /**
+     * Nastaví ID dokumentu.
+     * @param documentID - ID dokumentu.
+     */
+    public void setDocumentID(String documentID) {
+        this.documentID = documentID;
+    }
+
+    /**
+     * Získání id dokumentu.
+     * @return ID dokumentu.
+     */
+    public String getDocumentID() {
+        return documentID;
+    }
 }

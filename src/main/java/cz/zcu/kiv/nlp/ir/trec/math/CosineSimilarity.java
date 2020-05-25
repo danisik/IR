@@ -53,20 +53,18 @@ public class CosineSimilarity {
      * @return List výsledků.
      */
     public static List<Result> getMostRelevantDocumentToQuery(Dictionary dictionary, DocumentValues query, int mostRelevantDocumentsCount) {
-        Map<String, DocumentValues> documentValues = dictionary.getDocumentValues();
+
+        // Get all documents, which contains at least one word as query.
+        Set<DocumentValues> documentValues = dictionary.getDocumentIDsForQuery(query);
 
         if (mostRelevantDocumentsCount > documentValues.size()) {
             mostRelevantDocumentsCount = documentValues.size();
         }
 
-        // Get all documents, which contains at least one word as query.
-        Set<String> documentIDs = dictionary.getDocumentIDsForQuery(query);
-
         // Compute cosine similarity for document-query pair.
         List<Result> allRecords = new ArrayList<>();
-        for (String documentID : documentIDs) {
-            DocumentValues document = documentValues.get(documentID);
-            allRecords.add(new ResultImpl(documentID, computeCosineSimilarity(document, query)));
+        for (DocumentValues documentValue : documentValues) {
+            allRecords.add(new ResultImpl(documentValue.getDocumentID(), computeCosineSimilarity(documentValue, query)));
         }
 
         allRecords.sort(new ResultComparator());

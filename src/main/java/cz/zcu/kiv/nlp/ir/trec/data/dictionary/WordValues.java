@@ -1,5 +1,7 @@
 package cz.zcu.kiv.nlp.ir.trec.data.dictionary;
 
+import cz.zcu.kiv.nlp.ir.trec.data.document.DocumentValues;
+
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
@@ -10,7 +12,7 @@ import java.util.Set;
 public class WordValues implements Serializable {
 
     /** Seznam ID dokumentů, který obsahují toto slovo. */
-    private Set<String> documentIDs;
+    private Set<DocumentValues> documentValues;
 
     /** IDF hodnota daného slova. */
     private float idf;
@@ -21,24 +23,24 @@ public class WordValues implements Serializable {
      * Constructor.
      */
     public WordValues() {
-        this.documentIDs = new HashSet<>();
+        this.documentValues = new HashSet<>();
         this.idf = 0;
     }
 
     /**
-     * Přidá ID dokumentu do seznamu.
-     * @param documentID - ID dokumentu.
+     * Přidá odkaz na hodnoty dokumentu.
+     * @param documentValues - Hodnoty dokumentu.
      */
-    public void addDocumentID(String documentID) {
-        this.documentIDs.add(documentID);
+    public void addDocumentValues(DocumentValues documentValues) {
+        this.documentValues.add(documentValues);
     }
 
     /**
      * Vrátí seznam ID dokumentů.
      * @return Seznam dokumentů.
      */
-    public Set<String> getDocumentIDs() {
-        return this.documentIDs;
+    public Set<DocumentValues> getDocumentValues() {
+        return this.documentValues;
     }
 
     /**

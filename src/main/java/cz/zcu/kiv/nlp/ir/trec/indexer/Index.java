@@ -109,6 +109,7 @@ public class Index implements Indexer, Searcher {
         // Iterate through every document.
         for (Document document : documents) {
             indexSingleDocument(document);
+            dictionary.incrementIndexedDocuments();
         }
 
         // Calculating IDF for dictionary.
@@ -132,6 +133,7 @@ public class Index implements Indexer, Searcher {
 
         // Index single document.
         indexSingleDocument(document);
+        dictionary.incrementIndexedDocuments();
 
         // Calculating IDF for dictionary.
         dictionary.calculateIDF();
@@ -153,22 +155,25 @@ public class Index implements Indexer, Searcher {
         // Get line of text of specific documents attributes.
         String line = document.getDataForPreprocessing();
 
-                // Lowercase line if set.
-                if (toLowercase) {
-                    line.toLowerCase();
-                }
+        // Lowercase line if set.
+        if (toLowercase) {
+            line.toLowerCase();
+        }
 
-                // Remove accents before stemming if sets.
-                if (removeAccentsBeforeStemming) {
-                    line = tokenizer.removeAccents(line);
-                }
+        // Remove accents before stemming if sets.
+        if (removeAccentsBeforeStemming) {
+            line = tokenizer.removeAccents(line);
+        }
 
-                // Get words with tokenizer.
-                ArrayList<String> words = tokenizer.tokenize(line);
-                for (String word : words) {
+        DocumentValues documentValues = new DocumentValues();
+        documentValues.setDocumentID(documentId);
 
-                    // Apply stemmer if created.
-                    if (stemmer != null) {
+        // Get words with tokenizer.
+        ArrayList<String> words = tokenizer.tokenize(line);
+        for (String word : words) {
+
+            // Apply stemmer if created.
+            if (stemmer != null) {
                 word = stemmer.stem(word);
             }
 
@@ -182,9 +187,10 @@ public class Index implements Indexer, Searcher {
                 dictionary.addWord(word);
             }
             // Add document id for specific word.
-            dictionary.addDocumentId(word, documentId);
+            dictionary.addDocumentValues(word, documentValues);
+
             // Add word into document's dictionary.
-            dictionary.addDocumentWord(documentId, word);
+            documentValues.addWord(word);
         }
     }
 
@@ -256,10 +262,16 @@ public class Index implements Indexer, Searcher {
      * Metoda vypočítá tfidf hodnotu pro všechny dokumenty.
      */
     private void calculateDocumentsWordsTFIDF() {
+        /*
         Map<String, DocumentValues> documentValuesMap = this.dictionary.getDocumentValues();
 
         for (String documentID : documentValuesMap.keySet()) {
             DocumentValues documentValues = dictionary.getDocumentValuesById(documentID);
+            calculateDocumentWordsTFIDF(documentValues);
+        }
+         */
+
+        for (DocumentValues documentValues : dictionary.getAllDocumentValues()) {
             calculateDocumentWordsTFIDF(documentValues);
         }
     }

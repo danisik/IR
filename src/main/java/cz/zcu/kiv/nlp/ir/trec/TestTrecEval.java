@@ -51,7 +51,7 @@ public class TestTrecEval {
 
         // Set default options.
         index.setSearchType(ESearchType.SVM);
-        dataType = EDataType.CRAWLERED;
+        dataType = EDataType.CUSTOM;
 
         String indexedDataFilename = "";
 

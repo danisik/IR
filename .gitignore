@@ -5,3 +5,4 @@ target/*
 stopwords/*
 data/*
 zadani.txt
+/target/

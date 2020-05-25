@@ -15,8 +15,8 @@ public class Dictionary implements Serializable {
     /** Seznam všech slov ve slovníku. */
     private Map<String, WordValues> words;
 
-    /** Seznam hodnot dokumentů podle documentId. */
-    private Map<String, DocumentValues> documentValues;
+    /** Počet zaindexovaných dokumentů. */
+    private int indexedDocuments = 0;
 
     final static long serialVersionUID = -5097715898427114010L;
 
@@ -25,7 +25,6 @@ public class Dictionary implements Serializable {
      */
     public Dictionary() {
         this.words = new HashMap<>();
-        this.documentValues = new HashMap<>();
     }
 
     /**
@@ -46,50 +45,50 @@ public class Dictionary implements Serializable {
     }
 
     /**
-     * Přidání id dokumentu do invertovaného indexu.
+     * Přidání hodnoty dokumentu do invertovaného indexu.
      * @param word - Slovo.
-     * @param documentId - Id dokumentu.
+     * @param documentValues - Hodnoty dokumentu.
      */
-    public void addDocumentId(String word, String documentId) {
-        this.words.get(word).addDocumentID(documentId);
+    public void addDocumentValues(String word, DocumentValues documentValues) {
+        this.words.get(word).addDocumentValues(documentValues);
     }
 
     /**
      * Spočítání IDF pro dané slovo ve slovníku.
      */
     public void calculateIDF() {
-        int documentsCount = documentValues.size();
-
         for (String word : words.keySet()) {
             WordValues wordValues = words.get(word);
-            Set<String> set = wordValues.getDocumentIDs();
+            Set<DocumentValues> set = wordValues.getDocumentValues();
             int df = set.size();
-            wordValues.setIdf(TFIDF.calculateIDF(documentsCount, df));
+            wordValues.setIdf(TFIDF.calculateIDF(indexedDocuments, df));
         }
     }
 
     /**
-     * Přidání daného slova do dokument slovníku.
-     * @param documentId - Id dokumentu.
-     * @param word - Slovo.
+     * Get set of documentValues, which contains at least 1 word from query.
+     * @param query - Query.
+     * @return Set of documentValues.
      */
-    public void addDocumentWord(String documentId, String word) {
-        if (!documentValues.containsKey(documentId)) {
-            documentValues.put(documentId, new DocumentValues());
-        }
-        documentValues.get(documentId).addWord(word);
-    }
-
-    public Set<String> getDocumentIDsForQuery(DocumentValues query) {
-
-        Set<String> documentIDs = new HashSet<>();
+    public Set<DocumentValues> getDocumentIDsForQuery(DocumentValues query) {
+        Set<DocumentValues> documentValues = new HashSet<>();
 
         Map<String, DocumentWordValues> queryWords = query.getWordValues();
         for (String word : queryWords.keySet()) {
-            documentIDs.addAll(words.get(word).getDocumentIDs());
+            documentValues.addAll(words.get(word).getDocumentValues());
         }
 
-        return documentIDs;
+        return documentValues;
+    }
+
+    public Set<DocumentValues> getAllDocumentValues() {
+        Set<DocumentValues> documentValues = new HashSet<>();
+
+        for (String word : words.keySet()) {
+            documentValues.addAll(words.get(word).getDocumentValues());
+        }
+
+        return documentValues;
     }
 
     /**
@@ -101,15 +100,9 @@ public class Dictionary implements Serializable {
     }
 
     /**
-     * Získání všech hodnot dokumentů.
-     * @return Mapa hodnot dokumentů.
+     * Přičtení counteru pro zaindexované dokumenty.
      */
-    public Map<String, DocumentValues> getDocumentValues() { return documentValues; }
-
-    /**
-     * Získání hodnot dokumentu podle jeho Id.
-     * @param documentId - Id dokumentu.
-     * @return Hodnoty dokumentu.
-     */
-    public DocumentValues getDocumentValuesById(String documentId) { return documentValues.get(documentId); }
+    public void incrementIndexedDocuments() {
+        indexedDocuments++;
+    }
 }
