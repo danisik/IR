@@ -51,7 +51,7 @@ public class TestTrecEval {
 
         // Set default options.
         index.setSearchType(ESearchType.SVM);
-        dataType = EDataType.CUSTOM;
+        dataType = EDataType.CRAWLERED;
 
         String indexedDataFilename = "";
 
@@ -103,6 +103,9 @@ public class TestTrecEval {
         }
     }
 
+    /**
+     * Searching in documents from school.
+     */
     private static void searchInDocumentsFromSchool() {
         List<String> lines = new ArrayList<>();
         List<Topic> topics = SerializedDataHelper.loadTopic(new File(Constants.FILENAME_TOPIC_DATA));
@@ -140,13 +143,18 @@ public class TestTrecEval {
         }
     }
 
+    /**
+     * Searching in crawlered documents.
+     */
     private static void searchInCrawleredDocuments() {
         String query = "";
 
         // TODO: delete in final version.
         switch (index.getSearchType()) {
             case BOOLEAN:
-                query = "beta AND (alfa OR c) OR gamma";
+                //query = "beta AND (alfa OR c) OR gamma";
+                query = "2351 AND (715682 OR 717887) OR 717884";
+                //query = "2351";
                 break;
             case SVM:
                 query = "Prodej chalupy 2+1 s pozemkem o celkové výměře 2033";
@@ -170,7 +178,11 @@ public class TestTrecEval {
         System.out.println();
     }
 
-    // TODO: delete in final version.
+    /**
+     * Get crawlered document by its ID.
+     * @param id - ID of document.
+     * @return Crawlered document.
+     */
     private static CrawleredDocument getCrawleredDocument(String id) {
         for (Document document: documents) {
             if (document.getId().equals(id)) return (CrawleredDocument)document;
@@ -178,6 +190,12 @@ public class TestTrecEval {
         return null;
     }
 
+    /**
+     * Running trec evaluation.
+     * @param predictedFile - File with results.
+     * @return Output from test.
+     * @throws IOException
+     */
     private static String runTrecEval(String predictedFile) throws IOException {
 
         String commandLine = "./trec_eval.8.1/./trec_eval" +
@@ -211,6 +229,9 @@ public class TestTrecEval {
     }
 
 
+    /**
+     * Logger configuration.
+     */
     protected static void configureLogger() {
         BasicConfigurator.resetConfiguration();
         BasicConfigurator.configure();

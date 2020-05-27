@@ -3,6 +3,8 @@ package cz.zcu.kiv.nlp.ir.trec.data.dictionary;
 import cz.zcu.kiv.nlp.ir.trec.data.document.DocumentValues;
 import cz.zcu.kiv.nlp.ir.trec.data.document.DocumentWordValues;
 import cz.zcu.kiv.nlp.ir.trec.math.TFIDF;
+import gnu.trove.map.hash.THashMap;
+import gnu.trove.set.hash.THashSet;
 
 import java.io.Serializable;
 import java.util.*;
@@ -13,7 +15,7 @@ import java.util.*;
 public class Dictionary implements Serializable {
 
     /** Seznam všech slov ve slovníku. */
-    private Map<String, WordValues> words;
+    private THashMap<String, WordValues> words;
 
     /** Počet zaindexovaných dokumentů. */
     private int indexedDocuments = 0;
@@ -24,7 +26,7 @@ public class Dictionary implements Serializable {
      * Constructor.
      */
     public Dictionary() {
-        this.words = new HashMap<>();
+        this.words = new THashMap<>();
     }
 
     /**
@@ -70,8 +72,8 @@ public class Dictionary implements Serializable {
      * @param query - Query.
      * @return Set of documentValues.
      */
-    public Set<DocumentValues> getDocumentIDsForQuery(DocumentValues query) {
-        Set<DocumentValues> documentValues = new HashSet<>();
+    public THashSet<DocumentValues> getDocumentIDsForQuery(DocumentValues query) {
+        THashSet<DocumentValues> documentValues = new THashSet<>();
 
         Map<String, DocumentWordValues> queryWords = query.getWordValues();
         for (String word : queryWords.keySet()) {
@@ -83,8 +85,8 @@ public class Dictionary implements Serializable {
         return documentValues;
     }
 
-    public Set<DocumentValues> getAllDocumentValues() {
-        Set<DocumentValues> documentValues = new HashSet<>();
+    public THashSet<DocumentValues> getAllDocumentValues() {
+        THashSet<DocumentValues> documentValues = new THashSet<>();
 
         for (String word : words.keySet()) {
             documentValues.addAll(words.get(word).getDocumentValues());
@@ -97,9 +99,16 @@ public class Dictionary implements Serializable {
      * Metoda pro získání slovníku slov.
      * @return Slovník slov.
      */
-    public Map<String, WordValues> getWords() {
+    public THashMap<String, WordValues> getWords() {
         return words;
     }
+
+    /**
+     * Vrátí hodnoty slova pro dané slovo.
+     * @param word - Slovo.
+     * @return Hodnoty slova.
+     */
+    public WordValues getWordValues(String word) { return words.get(word); }
 
     /**
      * Přičtení counteru pro zaindexované dokumenty.

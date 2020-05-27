@@ -6,3 +6,4 @@ stopwords/*
 data/*
 zadani.txt
 /target/
+/bin/

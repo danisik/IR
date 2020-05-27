@@ -6,6 +6,7 @@ import cz.zcu.kiv.nlp.ir.trec.data.document.DocumentWordValues;
 import cz.zcu.kiv.nlp.ir.trec.data.result.Result;
 import cz.zcu.kiv.nlp.ir.trec.data.result.ResultComparator;
 import cz.zcu.kiv.nlp.ir.trec.data.result.ResultImpl;
+import gnu.trove.set.hash.THashSet;
 
 import java.util.*;
 
@@ -55,7 +56,7 @@ public class CosineSimilarity {
     public static List<Result> getMostRelevantDocumentToQuery(Dictionary dictionary, DocumentValues query, int mostRelevantDocumentsCount) {
 
         // Get all documents, which contains at least one word as query.
-        Set<DocumentValues> documentValues = dictionary.getDocumentIDsForQuery(query);
+        THashSet<DocumentValues> documentValues = dictionary.getDocumentIDsForQuery(query);
 
         if (mostRelevantDocumentsCount > documentValues.size()) {
             mostRelevantDocumentsCount = documentValues.size();

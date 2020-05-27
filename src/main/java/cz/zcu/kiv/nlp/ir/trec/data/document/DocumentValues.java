@@ -1,5 +1,7 @@
 package cz.zcu.kiv.nlp.ir.trec.data.document;
 
+import gnu.trove.map.hash.THashMap;
+
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
@@ -12,7 +14,7 @@ public class DocumentValues implements Serializable {
     /** ID dokumentu. */
     private String documentID;
     /** Slovník slov. */
-    private Map<String, DocumentWordValues> wordValues;
+    private THashMap<String, DocumentWordValues> wordValues;
     /** Střední hodnota. */
     private float euclidStandard;
 
@@ -22,7 +24,7 @@ public class DocumentValues implements Serializable {
      * Constructor.
      */
     public DocumentValues() {
-        wordValues = new HashMap<>();
+        wordValues = new THashMap<>();
     }
 
     /**
@@ -56,7 +58,7 @@ public class DocumentValues implements Serializable {
      * Získání slovníku slov.
      * @return - Slovník slov.
      */
-    public Map<String, DocumentWordValues> getWordValues() { return  wordValues; }
+    public THashMap<String, DocumentWordValues> getWordValues() { return  wordValues; }
 
     /**
      * Nastaví ID dokumentu.

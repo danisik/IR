@@ -1,12 +1,9 @@
 package cz.zcu.kiv.nlp.ir.trec.data;
 
 import cz.zcu.kiv.nlp.ir.trec.data.document.Document;
-import cz.zcu.kiv.nlp.ir.trec.data.document.DocumentWordValues;
 
 import java.io.Serializable;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Created by Tigi on 8.1.2015.
@@ -22,12 +19,6 @@ public class DocumentNew implements Document, Serializable {
     private String id;
     private String title;
     private Date date;
-
-    private Map<String, DocumentWordValues> words;
-
-    public DocumentNew() {
-        words = new HashMap<>();
-    }
 
     private final static long serialVersionUID = -5097715898427114007L;
 

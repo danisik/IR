@@ -8,11 +8,15 @@ import cz.zcu.kiv.nlp.ir.trec.data.document.Document;
 import cz.zcu.kiv.nlp.ir.trec.data.document.DocumentValues;
 import cz.zcu.kiv.nlp.ir.trec.data.document.DocumentWordValues;
 import cz.zcu.kiv.nlp.ir.trec.data.enums.ESearchType;
+import cz.zcu.kiv.nlp.ir.trec.data.query.QueryRecord;
 import cz.zcu.kiv.nlp.ir.trec.data.result.Result;
+import cz.zcu.kiv.nlp.ir.trec.data.result.ResultImpl;
 import cz.zcu.kiv.nlp.ir.trec.math.CosineSimilarity;
 import cz.zcu.kiv.nlp.ir.trec.math.TFIDF;
 import cz.zcu.kiv.nlp.ir.trec.stemmer.Stemmer;
 import cz.zcu.kiv.nlp.ir.trec.tokenizer.Tokenizer;
+import gnu.trove.map.hash.THashMap;
+import gnu.trove.set.hash.THashSet;
 import org.apache.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.cz.CzechAnalyzer;
@@ -231,23 +235,7 @@ public class Index implements Indexer, Searcher {
                     break;
                 }
 
-                BooleanClause clause = ((BooleanQuery) q).clauses().get(1);
-                TermQuery query2 = (TermQuery) clause.getQuery();
-                Term term = query2.getTerm();
-                String text = term.text();
-                String field = term.field();
-
-                if (q instanceof TermQuery) {
-
-                }
-                else if (q instanceof BooleanQuery) {
-
-                }
-                else {
-                    log.warn("Unsupported query type !");
-                    break;
-                }
-
+                results = new ArrayList<>(processQuery(q));
                 break;
 
             // Default.
@@ -262,15 +250,6 @@ public class Index implements Indexer, Searcher {
      * Metoda vypočítá tfidf hodnotu pro všechny dokumenty.
      */
     private void calculateDocumentsWordsTFIDF() {
-        /*
-        Map<String, DocumentValues> documentValuesMap = this.dictionary.getDocumentValues();
-
-        for (String documentID : documentValuesMap.keySet()) {
-            DocumentValues documentValues = dictionary.getDocumentValuesById(documentID);
-            calculateDocumentWordsTFIDF(documentValues);
-        }
-         */
-
         for (DocumentValues documentValues : dictionary.getAllDocumentValues()) {
             calculateDocumentWordsTFIDF(documentValues);
         }
@@ -281,8 +260,8 @@ public class Index implements Indexer, Searcher {
      * @param documentValues - Hodnoty dokumentu.
      */
     private void calculateDocumentWordsTFIDF(DocumentValues documentValues) {
-        Map<String, WordValues> wordsWithIDF = dictionary.getWords();
-        Map<String, DocumentWordValues> documentWords = documentValues.getWordValues();
+        THashMap<String, WordValues> wordsWithIDF = dictionary.getWords();
+        THashMap<String, DocumentWordValues> documentWords = documentValues.getWordValues();
 
         float euclidStandard = 0;
         for (String word : documentWords.keySet()) {
@@ -296,6 +275,65 @@ public class Index implements Indexer, Searcher {
         }
         euclidStandard = (float) Math.sqrt(euclidStandard);
         documentValues.setEuclidStandard(euclidStandard);
+    }
+
+    public THashSet<Result> processQuery(Query query) {
+        THashSet<Result> results = new THashSet<>();
+
+        if (query instanceof TermQuery) {
+            Term term = ((TermQuery)query).getTerm();
+            String text = term.text();
+
+            WordValues wordValues = dictionary.getWordValues(text);
+
+            if (wordValues != null) {
+                for (DocumentValues documentValues : wordValues.getDocumentValues()) {
+                    results.add(new ResultImpl(documentValues.getDocumentID(), 0));
+                }
+            }
+        }
+        else {
+            ArrayList<QueryRecord> queryRecords = new ArrayList<>();
+
+            for (BooleanClause clause : ((BooleanQuery)query).clauses()) {
+                queryRecords.add(new QueryRecord(clause.getOccur(), processQuery(clause.getQuery())));
+            }
+
+            if (queryRecords.size() > 0) {
+                for (QueryRecord record : queryRecords) {
+                    THashSet<Result> queryResults = record.getResults();
+
+                    switch(record.getOccur()) {
+                        case MUST:
+                            // TODO: not implemented.
+
+                            break;
+                        case SHOULD:
+                            // TODO: otestovat zda se nepřidá Results s documentID, který už existuje v HashSetu.
+                            results.addAll(queryResults);
+                            break;
+                        case FILTER:
+                            // TODO: not implemented.
+                            break;
+                        case MUST_NOT:
+                            // TODO: not implemented.
+                            break;
+                    }
+                }
+            }
+
+
+
+            //AND
+            //OR
+            //AND NOT
+            //OR NOT
+
+
+            System.out.println();
+        }
+
+        return results;
     }
 
     /**
