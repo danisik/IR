@@ -50,7 +50,7 @@ public class TestTrecEval {
                 "", false, true, true, (short)10);
 
         // Set default options.
-        index.setSearchType(ESearchType.SVM);
+        index.setSearchType(ESearchType.BOOLEAN);
         dataType = EDataType.CRAWLERED;
 
         String indexedDataFilename = "";
@@ -153,8 +153,9 @@ public class TestTrecEval {
         switch (index.getSearchType()) {
             case BOOLEAN:
                 //query = "beta AND (alfa OR c) OR gamma";
-                query = "2351 AND (715682 OR 717887) OR 717884";
+                //query = "2351 AND (715682 OR 717887) OR 717884";
                 //query = "2351";
+                query = "nízkopodlažního AND slaný OR meclov";
                 break;
             case SVM:
                 query = "Prodej chalupy 2+1 s pozemkem o celkové výměře 2033";

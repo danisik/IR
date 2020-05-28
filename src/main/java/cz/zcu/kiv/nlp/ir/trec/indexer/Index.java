@@ -19,6 +19,7 @@ import gnu.trove.map.hash.THashMap;
 import gnu.trove.set.hash.THashSet;
 import org.apache.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.analysis.cz.CzechAnalyzer;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -85,7 +86,7 @@ public class Index implements Indexer, Searcher {
         this.searchType = ESearchType.SVM;
 
         // TODO: preprocess query same as normal documents. -> new Analyzer
-        this.parser = new QueryParser(defaultField, new CzechAnalyzer());
+        this.parser = new QueryParser(defaultField, new WhitespaceAnalyzer());
 
         log.info("Stemmer: " + stemmer.getClass().getSimpleName());
         log.info("Tokenizer: " + tokenizer.getClass().getSimpleName());
@@ -282,7 +283,7 @@ public class Index implements Indexer, Searcher {
 
         if (query instanceof TermQuery) {
             Term term = ((TermQuery)query).getTerm();
-            String text = term.text();
+            String text = getProcessedForm(term.text());
 
             WordValues wordValues = dictionary.getWordValues(text);
 
@@ -300,16 +301,21 @@ public class Index implements Indexer, Searcher {
             }
 
             if (queryRecords.size() > 0) {
-                for (QueryRecord record : queryRecords) {
+                for (int i = 0; i < queryRecords.size(); i++) {
+                    QueryRecord record = queryRecords.get(i);
                     THashSet<Result> queryResults = record.getResults();
+
+                    if (i == 0) {
+                        // Pokud je to první klauzule, zkopíruj všechny záznamy a nepoužívej operátor.
+                        results.addAll(queryResults);
+                        continue;
+                    }
 
                     switch(record.getOccur()) {
                         case MUST:
-                            // TODO: not implemented.
-
+                            results.retainAll(queryResults);
                             break;
                         case SHOULD:
-                            // TODO: otestovat zda se nepřidá Results s documentID, který už existuje v HashSetu.
                             results.addAll(queryResults);
                             break;
                         case FILTER:
@@ -321,13 +327,8 @@ public class Index implements Indexer, Searcher {
                     }
                 }
             }
-
-
-
-            //AND
-            //OR
-            //AND NOT
-            //OR NOT
+            // TODO: AND NOT
+            // TODO: OR NOT
 
 
             System.out.println();
