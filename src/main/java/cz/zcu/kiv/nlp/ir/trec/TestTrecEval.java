@@ -155,7 +155,10 @@ public class TestTrecEval {
                 //query = "beta AND (alfa OR c) OR gamma";
                 //query = "2351 AND (715682 OR 717887) OR 717884";
                 //query = "2351";
-                query = "nízkopodlažního AND slaný OR meclov";
+                //query = "nízkopodlažního AND NOT slaný OR NOT meclov";
+                //query = "(Praha OR (text1 AND NOT text2)) AND NOT (Brno OR NOT (Praha AND NOT Plzeň)) OR NOT Ostrava";
+                //query = "PRAHA NOT OSTRAVA"; // Defaultně se dává OR.
+                query = "(Praha OR (text1 AND NOT text2 )) AND NOT ( Brno OR Praha)";
                 break;
             case SVM:
                 query = "Prodej chalupy 2+1 s pozemkem o celkové výměře 2033";
@@ -163,6 +166,7 @@ public class TestTrecEval {
         }
 
         long startTime = System.currentTimeMillis();
+        // TODO: ve finální verzi nastavit maximální počet relevantních dokumentů na velikost dokumentů.
         List<Result> resultHits = index.search(query);
         long estimatedTime = System.currentTimeMillis() - startTime;
         log.info("Searching done after " + (double)estimatedTime / 1000 + " seconds");

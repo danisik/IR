@@ -3,8 +3,6 @@ package cz.zcu.kiv.nlp.ir.trec.data.document;
 import gnu.trove.map.hash.THashMap;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Třída obsahující hodnoty pro dokument.
@@ -74,5 +72,22 @@ public class DocumentValues implements Serializable {
      */
     public String getDocumentID() {
         return documentID;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + getDocumentID().hashCode();
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof DocumentValues) {
+            DocumentValues o = (DocumentValues) obj;
+            return o.getDocumentID() == this.getDocumentID();
+        }
+        return false;
     }
 }

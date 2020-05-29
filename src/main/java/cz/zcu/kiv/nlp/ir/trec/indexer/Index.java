@@ -8,6 +8,7 @@ import cz.zcu.kiv.nlp.ir.trec.data.document.Document;
 import cz.zcu.kiv.nlp.ir.trec.data.document.DocumentValues;
 import cz.zcu.kiv.nlp.ir.trec.data.document.DocumentWordValues;
 import cz.zcu.kiv.nlp.ir.trec.data.enums.ESearchType;
+import cz.zcu.kiv.nlp.ir.trec.data.query.BooleanQueryPreparer;
 import cz.zcu.kiv.nlp.ir.trec.data.query.QueryRecord;
 import cz.zcu.kiv.nlp.ir.trec.data.result.Result;
 import cz.zcu.kiv.nlp.ir.trec.data.result.ResultImpl;
@@ -18,9 +19,7 @@ import cz.zcu.kiv.nlp.ir.trec.tokenizer.Tokenizer;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.set.hash.THashSet;
 import org.apache.log4j.Logger;
-import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
-import org.apache.lucene.analysis.cz.CzechAnalyzer;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
@@ -32,8 +31,8 @@ import org.apache.lucene.search.TermQuery;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author tigi
@@ -85,7 +84,7 @@ public class Index implements Indexer, Searcher {
         // Default search type.
         this.searchType = ESearchType.SVM;
 
-        // TODO: preprocess query same as normal documents. -> new Analyzer
+        // Query parser.
         this.parser = new QueryParser(defaultField, new WhitespaceAnalyzer());
 
         log.info("Stemmer: " + stemmer.getClass().getSimpleName());
@@ -230,13 +229,16 @@ public class Index implements Indexer, Searcher {
             case BOOLEAN:
                 Query q;
                 try {
-                    q = parser.parse(query);
+
+                    String newQuery = BooleanQueryPreparer.prepareQuery(Arrays.asList(query.split(" ")));
+
+                    q = parser.parse(newQuery);
+                    results = new ArrayList<>(processQuery(q));
                 } catch (ParseException e) {
                     log.warn("Query '" + query + "' is not valid query!");
                     break;
                 }
 
-                results = new ArrayList<>(processQuery(q));
                 break;
 
             // Default.
@@ -278,10 +280,17 @@ public class Index implements Indexer, Searcher {
         documentValues.setEuclidStandard(euclidStandard);
     }
 
+    /**
+     * Metoda zpracovávající BOOLEAN query.
+     * @param query - Query (podporovány TermQuery, BooleanQuery).
+     * @return Set výsledků pro daný TermQuery.
+     */
     public THashSet<Result> processQuery(Query query) {
+        // TODO: priorita operátorů !!!! (AND -> OR -> NOT)
         THashSet<Result> results = new THashSet<>();
 
         if (query instanceof TermQuery) {
+            // Pokud je query typu TermQuery, tak získej seznam hodnot dokumentů pro zpracované slovo.
             Term term = ((TermQuery)query).getTerm();
             String text = getProcessedForm(term.text());
 
@@ -294,44 +303,48 @@ public class Index implements Indexer, Searcher {
             }
         }
         else {
+            // Pokud je query typu BooleanQuery, tak projeď všechny klauzule.
             ArrayList<QueryRecord> queryRecords = new ArrayList<>();
 
             for (BooleanClause clause : ((BooleanQuery)query).clauses()) {
                 queryRecords.add(new QueryRecord(clause.getOccur(), processQuery(clause.getQuery())));
             }
 
+            // Po projetí všech klauzulí projeď všechny query záznamy.
             if (queryRecords.size() > 0) {
                 for (int i = 0; i < queryRecords.size(); i++) {
                     QueryRecord record = queryRecords.get(i);
                     THashSet<Result> queryResults = record.getResults();
 
-                    if (i == 0) {
-                        // Pokud je to první klauzule, zkopíruj všechny záznamy a nepoužívej operátor.
-                        results.addAll(queryResults);
-                        continue;
-                    }
-
+                    // Zkontroluj typ operátoru.
                     switch(record.getOccur()) {
                         case MUST:
-                            results.retainAll(queryResults);
+                            // Operátor AND - získej všechny hodnoty dokumentů, který se vyskytují v obou slovech.
+
+                            if (i == 0) {
+                                // Pokud je to první klauzule, zkopíruj všechny záznamy.
+                                results.addAll(queryResults);
+                            }
+                            else {
+                                results.retainAll(queryResults);
+                            }
                             break;
                         case SHOULD:
+                            // Operátor OR - získej všechny hodnoty dokumentů spojením obou listů.
                             results.addAll(queryResults);
                             break;
-                        case FILTER:
-                            // TODO: not implemented.
-                            break;
                         case MUST_NOT:
+                            // Operátor NOT, který je použit buď s AND nebo OR.
                             // TODO: not implemented.
+                            // TODO: AND NOT
+                            // TODO: OR NOT
+                            // Projít všechny documentValues -> do hlavního setu vložit všechny odkazy ze všech seznamů
+                            // potom smazat všechny documentValues ze seznamu pro dané slovo v hlavním setu.
+                            // --> tím je vyřešeno to, pokud je NOT jako první věc v query (NOT alfa
                             break;
                     }
                 }
             }
-            // TODO: AND NOT
-            // TODO: OR NOT
-
-
-            System.out.println();
         }
 
         return results;
@@ -432,7 +445,10 @@ public class Index implements Indexer, Searcher {
         this.searchType = searchType;
     }
 
-    // TODO: delete in final version.
+    /**
+     * Vrátí aktuálně nastavený typ vyhledávání.
+     * @return Typ vyhledávání.
+     */
     public ESearchType getSearchType() {
         return searchType;
     }
