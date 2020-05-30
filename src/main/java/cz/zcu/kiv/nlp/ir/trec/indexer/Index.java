@@ -56,7 +56,7 @@ public class Index implements Indexer, Searcher {
     private boolean removeAccentsBeforeStemming;
     private boolean removeAccentsAfterStemming;
     private boolean toLowercase;
-    private short mostRelevantDocumentsCount;
+    private int mostRelevantDocumentsCount;
     private QueryParser parser;
 
     private ESearchType searchType;
@@ -72,7 +72,7 @@ public class Index implements Indexer, Searcher {
      * @param mostRelevantDocumentsCount - Počet dokumentů, kteří jsou nejvíce relevantní k dotazu.
      */
     public Index(Stemmer stemmer, Tokenizer tokenizer, String defaultField, boolean removeAccentsBeforeStemming,
-                 boolean removeAccentsAfterStemming, boolean toLowercase, short mostRelevantDocumentsCount) {
+                 boolean removeAccentsAfterStemming, boolean toLowercase, int mostRelevantDocumentsCount) {
         this.dictionary = new Dictionary();
         this.stemmer = stemmer;
         this.tokenizer = tokenizer;
@@ -331,16 +331,29 @@ public class Index implements Indexer, Searcher {
                             break;
                         case SHOULD:
                             // Operátor OR - získej všechny hodnoty dokumentů spojením obou listů.
+
                             results.addAll(queryResults);
                             break;
                         case MUST_NOT:
                             // Operátor NOT, který je použit buď s AND nebo OR.
-                            // TODO: not implemented.
-                            // TODO: AND NOT
-                            // TODO: OR NOT
-                            // Projít všechny documentValues -> do hlavního setu vložit všechny odkazy ze všech seznamů
-                            // potom smazat všechny documentValues ze seznamu pro dané slovo v hlavním setu.
-                            // --> tím je vyřešeno to, pokud je NOT jako první věc v query (NOT alfa
+
+                            boolean contains;
+                            for (DocumentValues documentValues : dictionary.getAllDocumentValues()) {
+                                contains = false;
+
+                                // Pokud se dokument nenachází ve výsledkách pro daný token, tak ho přidej do výsledků.
+                                for (Result result : queryResults) {
+                                    if (result.getDocumentID().equals(documentValues.getDocumentID())) {
+                                        contains = true;
+                                        break;
+                                    }
+                                }
+
+                                if (!contains) {
+                                    results.add(new ResultImpl(documentValues.getDocumentID(), 0));
+                                }
+
+                            }
                             break;
                     }
                 }

@@ -47,7 +47,7 @@ public class TestTrecEval {
 
         // Init indexer.
         index = new Index(new CzechStemmerAgressive(), new AdvancedTokenizer(Constants.FILENAME_STOPWORDS),
-                "", false, true, true, (short)10);
+                "", false, true, true, 10);
 
         // Set default options.
         index.setSearchType(ESearchType.BOOLEAN);
@@ -107,6 +107,28 @@ public class TestTrecEval {
      * Searching in documents from school.
      */
     private static void searchInDocumentsFromSchool() {
+        String query = "";
+
+        switch (index.getSearchType()) {
+            case BOOLEAN:
+                //query = "beta AND (alfa OR c) OR gamma";
+                //query = "2351 AND (715682 OR 717887) OR 717884";
+                //query = "2351";
+                //query = "nízkopodlažního AND NOT slaný OR NOT meclov";
+                query = "autooo AND NOT slaný";
+                //query = "(Praha OR (text1 AND NOT text2)) AND NOT (Brno OR NOT (Praha AND NOT Plzeň)) OR NOT Ostrava";
+                //query = "PRAHA NOT OSTRAVA"; // Defaultně se dává OR.
+                //query = "(Praha OR (text1 AND NOT text2 )) AND NOT ( Brno OR Praha)";
+                //query = "NOT alfa";
+                List<Result> resultHits = index.search(query);
+                System.out.println(resultHits.size());
+                break;
+            case SVM:
+                query = "Prodej chalupy 2+1 s pozemkem o celkové výměře 2033";
+                break;
+        }
+        /*
+
         List<String> lines = new ArrayList<>();
         List<Topic> topics = SerializedDataHelper.loadTopic(new File(Constants.FILENAME_TOPIC_DATA));
 
@@ -117,30 +139,19 @@ public class TestTrecEval {
             long estimatedTime = System.currentTimeMillis() - startTime;
             log.info("Searching done after " + (double)estimatedTime / 1000 + " seconds");
 
-            // TODO: delete in final version.
             System.out.println("Most relevant results for topic: " + t.getId() + " - " + t.getTitle());
             System.out.println("----------------------");
             for (Result r : resultHits) {
                 final String line = r.toString(t.getId());
                 lines.add(line);
-
-                // TODO: delete in final version.
                 System.out.println("TopicID: " + t.getId() + " | DocumentID: " + r.getDocumentID() + " | Score: " + r.getScore() + " | Rank: " + r.getRank());
             }
             if (resultHits.size() == 0) {
                 lines.add(t.getId() + " Q0 " + "abc" + " " + "99" + " " + 0.0 + " runindex1");
             }
-            System.out.println();
         }
 
-        final File outputFile = new File(Constants.OUTPUT_DIR + "/results " + SerializedDataHelper.SDF.format(System.currentTimeMillis()) + ".txt");
-        IOUtils.saveFile(outputFile, lines);
-        //try to run evaluation
-        try {
-            runTrecEval(outputFile.toString());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+         */
     }
 
     /**
@@ -149,16 +160,17 @@ public class TestTrecEval {
     private static void searchInCrawleredDocuments() {
         String query = "";
 
-        // TODO: delete in final version.
         switch (index.getSearchType()) {
             case BOOLEAN:
                 //query = "beta AND (alfa OR c) OR gamma";
                 //query = "2351 AND (715682 OR 717887) OR 717884";
                 //query = "2351";
-                //query = "nízkopodlažního AND NOT slaný OR NOT meclov";
+                query = "nízkopodlažního AND NOT slaný OR NOT meclov";
+                //query = "autooo OR NOT slaný";
                 //query = "(Praha OR (text1 AND NOT text2)) AND NOT (Brno OR NOT (Praha AND NOT Plzeň)) OR NOT Ostrava";
                 //query = "PRAHA NOT OSTRAVA"; // Defaultně se dává OR.
-                query = "(Praha OR (text1 AND NOT text2 )) AND NOT ( Brno OR Praha)";
+                //query = "(Praha OR (text1 AND NOT text2 )) AND NOT ( Brno OR Praha)";
+                //query = "NOT alfa";
                 break;
             case SVM:
                 query = "Prodej chalupy 2+1 s pozemkem o celkové výměře 2033";
@@ -171,11 +183,9 @@ public class TestTrecEval {
         long estimatedTime = System.currentTimeMillis() - startTime;
         log.info("Searching done after " + (double)estimatedTime / 1000 + " seconds");
 
-        // TODO: delete in final version.
         System.out.println("Most relevant results for query: " + query);
         System.out.println("----------------------");
         for (Result r : resultHits) {
-            // TODO: delete in final version.
             CrawleredDocument document = getCrawleredDocument(r.getDocumentID());
             System.out.println("DocumentID: " + r.getDocumentID() + " | Score: " + r.getScore() + " | Rank: " + r.getRank() + " | Title: " + document.getTitle()
             + " | Description: " + document.getDescription());
