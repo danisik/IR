@@ -20,6 +20,7 @@ public class Dictionary implements Serializable {
     /** Počet zaindexovaných dokumentů. */
     private int indexedDocuments = 0;
 
+    /** Číslo pro serializaci */
     final static long serialVersionUID = -5097715898427114010L;
 
     /**
@@ -85,6 +86,10 @@ public class Dictionary implements Serializable {
         return documentValues;
     }
 
+    /**
+     * Získání všech unikátních hodnot dokumentů.
+     * @return Seznam unikátních dokumentů.
+     */
     public THashSet<DocumentValues> getAllDocumentValues() {
         THashSet<DocumentValues> documentValues = new THashSet<>();
 

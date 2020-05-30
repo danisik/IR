@@ -10,13 +10,28 @@ import java.util.Date;
  */
 public class CrawleredDocument implements Document, Serializable {
 
+    /** ID článku. */
     private String id;
+
+    /** Titulek článku. */
     private String title = "";
+
+    /** Cena bytu. */
     private String price = "";
+
+    /** Dodatečné informace k ceně. */
     private String priceAdditionalInfo = "";
+
+    /** Detailní overview. */
     private DetailedOverview detailedOverview;
+
+    /** Popisek článku. */
     private String description = "";
+
+    /** Parametry bytu. */
     private PropertyParameters propertyParameters;
+
+    /** Url. */
     private String url = "";
 
     @Override

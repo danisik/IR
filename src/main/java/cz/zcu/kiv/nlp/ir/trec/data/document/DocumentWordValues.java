@@ -13,6 +13,7 @@ public class DocumentWordValues implements Serializable {
     /** TF hodnota. */
     private int tf;
 
+    /** Číslo pro serializaci. */
     final static long serialVersionUID = -4321715898427114010L;
 
     /**

@@ -4,7 +4,6 @@ import cz.zcu.kiv.nlp.ir.trec.data.document.DocumentValues;
 import gnu.trove.set.hash.THashSet;
 
 import java.io.Serializable;
-import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -18,6 +17,7 @@ public class WordValues implements Serializable {
     /** IDF hodnota daného slova. */
     private float idf;
 
+    /** Číslo pro serializaci */
     final static long serialVersionUID = -5097715898422114010L;
 
     /**

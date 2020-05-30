@@ -22,7 +22,8 @@ import org.apache.log4j.Logger;
 import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
+import org.apache.lucene.queryparser.flexible.precedence.PrecedenceQueryParser;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
@@ -57,7 +58,8 @@ public class Index implements Indexer, Searcher {
     private boolean removeAccentsAfterStemming;
     private boolean toLowercase;
     private int mostRelevantDocumentsCount;
-    private QueryParser parser;
+    private PrecedenceQueryParser parser;
+    private String defaultField;
 
     private ESearchType searchType;
 
@@ -76,6 +78,7 @@ public class Index implements Indexer, Searcher {
         this.dictionary = new Dictionary();
         this.stemmer = stemmer;
         this.tokenizer = tokenizer;
+        this.defaultField = defaultField;
         this.removeAccentsBeforeStemming = removeAccentsBeforeStemming;
         this.removeAccentsAfterStemming = removeAccentsAfterStemming;
         this.toLowercase = toLowercase;
@@ -84,8 +87,8 @@ public class Index implements Indexer, Searcher {
         // Default search type.
         this.searchType = ESearchType.SVM;
 
-        // Query parser.
-        this.parser = new QueryParser(defaultField, new WhitespaceAnalyzer());
+        // Query parser s prioritou operátorů (AND -> OR).
+        this.parser = new PrecedenceQueryParser(new WhitespaceAnalyzer());
 
         log.info("Stemmer: " + stemmer.getClass().getSimpleName());
         log.info("Tokenizer: " + tokenizer.getClass().getSimpleName());
@@ -232,9 +235,9 @@ public class Index implements Indexer, Searcher {
 
                     String newQuery = BooleanQueryPreparer.prepareQuery(Arrays.asList(query.split(" ")));
 
-                    q = parser.parse(newQuery);
+                    q = parser.parse(newQuery, this.defaultField);
                     results = new ArrayList<>(processQuery(q));
-                } catch (ParseException e) {
+                } catch (ParseException | QueryNodeException e) {
                     log.warn("Query '" + query + "' is not valid query!");
                     break;
                 }
@@ -286,7 +289,6 @@ public class Index implements Indexer, Searcher {
      * @return Set výsledků pro daný TermQuery.
      */
     public THashSet<Result> processQuery(Query query) {
-        // TODO: priorita operátorů !!!! (AND -> OR -> NOT)
         THashSet<Result> results = new THashSet<>();
 
         if (query instanceof TermQuery) {

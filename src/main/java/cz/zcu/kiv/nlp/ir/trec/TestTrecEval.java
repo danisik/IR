@@ -165,7 +165,9 @@ public class TestTrecEval {
                 //query = "beta AND (alfa OR c) OR gamma";
                 //query = "2351 AND (715682 OR 717887) OR 717884";
                 //query = "2351";
-                query = "nízkopodlažního AND NOT slaný OR NOT meclov";
+                //query = "nízkopodlažního AND NOT slaný OR NOT meclov";
+                query = "nízkopodlažního OR slaný AND meclov";
+                query = "nízkopodlažního AND NOT slaný OR meclov";
                 //query = "autooo OR NOT slaný";
                 //query = "(Praha OR (text1 AND NOT text2)) AND NOT (Brno OR NOT (Praha AND NOT Plzeň)) OR NOT Ostrava";
                 //query = "PRAHA NOT OSTRAVA"; // Defaultně se dává OR.

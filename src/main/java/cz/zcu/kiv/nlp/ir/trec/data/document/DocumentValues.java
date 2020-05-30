@@ -16,6 +16,7 @@ public class DocumentValues implements Serializable {
     /** Střední hodnota. */
     private float euclidStandard;
 
+    /** Číslo pro serializaci. */
     final static long serialVersionUID = -8237428427114010L;
 
     /**
