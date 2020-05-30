@@ -5,5 +5,14 @@ package cz.zcu.kiv.nlp.ir.trec.data.enums;
  */
 public enum EDataType {
     CRAWLERED,
-    CUSTOM
+    CUSTOM;
+
+    public static EDataType getDataType(String stringDataType) {
+        if (stringDataType.equals(EDataType.CRAWLERED.toString())) {
+            return EDataType.CRAWLERED;
+        }
+        else {
+            return EDataType.CUSTOM;
+        }
+    }
 }

@@ -5,5 +5,14 @@ package cz.zcu.kiv.nlp.ir.trec.data.enums;
  */
 public enum ESearchType {
     BOOLEAN,
-    SVM
+    SVM;
+
+    public static ESearchType getSearchType(String stringSearchType) {
+        if (stringSearchType.equals(ESearchType.BOOLEAN.toString())) {
+            return ESearchType.BOOLEAN;
+        }
+        else {
+            return ESearchType.SVM;
+        }
+    }
 }

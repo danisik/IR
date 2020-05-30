@@ -2,17 +2,20 @@ package cz.zcu.kiv.nlp.ir.trec;
 
 import cz.zcu.kiv.nlp.ir.trec.data.*;
 import cz.zcu.kiv.nlp.ir.trec.data.document.Document;
-import cz.zcu.kiv.nlp.ir.trec.data.document.crawlered.CrawleredDocument;
-import cz.zcu.kiv.nlp.ir.trec.data.enums.EDataType;
-import cz.zcu.kiv.nlp.ir.trec.data.enums.ESearchType;
 import cz.zcu.kiv.nlp.ir.trec.data.result.Result;
 import cz.zcu.kiv.nlp.ir.trec.indexer.Index;
 import cz.zcu.kiv.nlp.ir.trec.stemmer.CzechStemmerAgressive;
 import cz.zcu.kiv.nlp.ir.trec.tokenizer.AdvancedTokenizer;
 import org.apache.log4j.*;
-import org.apache.lucene.analysis.cz.CzechAnalyzer;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.*;
 import java.io.*;
+import java.text.ParseException;
 import java.util.*;
 
 
@@ -24,10 +27,27 @@ import java.util.*;
  */
 public class TestTrecEval {
 
-    private static Logger log = Logger.getLogger(TestTrecEval.class);
-    private static EDataType dataType = null;
-    private static Index index;
-    private static List<Document> documents;
+    static Logger log = Logger.getLogger(TestTrecEval.class);
+    static final String OUTPUT_DIR = "./TREC";
+
+    protected static void configureLogger() {
+        BasicConfigurator.resetConfiguration();
+        BasicConfigurator.configure();
+
+        File results = new File(OUTPUT_DIR);
+        if (!results.exists()) {
+            results.mkdir();
+        }
+
+        try {
+            Appender appender = new WriterAppender(new PatternLayout(), new FileOutputStream(new File(OUTPUT_DIR + "/" + SerializedDataHelper.SDF.format(System.currentTimeMillis()) + " - " + ".log"), false));
+            BasicConfigurator.configure(appender);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        Logger.getRootLogger().setLevel(Level.INFO);
+    }
 
     /**
      * Metoda vytvoří objekt indexu, načte data, zaindexuje je provede předdefinované dotazy a výsledky vyhledávání
@@ -42,177 +62,64 @@ public class TestTrecEval {
      *
      * Metodu není třeba měnit kromě řádků označených T O D O  - tj. vytvoření objektu třídy {@link Index} a
      */
-    public static void main(String args[]) throws Exception {
+    public static void main(String args[]) throws IOException {
         configureLogger();
 
-        // Init indexer.
-        index = new Index(new CzechStemmerAgressive(), new AdvancedTokenizer(Constants.FILENAME_STOPWORDS),
-                "", false, true, true, 10);
+        Index index = new Index(new CzechStemmerAgressive(), new AdvancedTokenizer(Constants.FILENAME_STOPWORDS),
+                "", false, true, true, 0);
 
-        // Set default options.
-        index.setSearchType(ESearchType.BOOLEAN);
-        dataType = EDataType.CRAWLERED;
+        List<Topic> topics = SerializedDataHelper.loadTopic(new File(OUTPUT_DIR + "/topicData.bin"));
 
-        String indexedDataFilename = "";
+        File serializedData = new File(OUTPUT_DIR + "/czechData.bin");
 
-        log.info("Load " + dataType.toString() + " documents.");
-        switch(dataType) {
-            // Načtení školních dokumentů.
-            case CUSTOM:
-                documents = DataLoader.loadDocumentsFromSchool(Constants.FILENAME_CUSTOM_DATA);
-                indexedDataFilename = Constants.FILENAME_DATA_INDEX_CUSTOM;
-                break;
-
-            // Načtení stažených dat.
-            case CRAWLERED:
-                documents = DataLoader.loadCrawleredData(Constants.FILENAME_CRAWLERED_DATA);
-                indexedDataFilename = Constants.FILENAME_DATA_INDEX_CRAWLERED;
-                break;
-
-            // Default.
-            default:
-                break;
+        List<Document> documents = new ArrayList<Document>();
+        log.info("load");
+        try {
+            if (serializedData.exists()) {
+                documents = SerializedDataHelper.loadDocument(serializedData);
+            } else {
+                log.error("Cannot find " + serializedData);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+        log.info("Documents: " + documents.size());
 
-        log.info("Documents count: " + documents.size());
+        index.setMostRelevantDocumentsCount(documents.size());
+        index.index(documents);
 
-        // Načtení indexovaných dat.
-        if (!index.loadIndexedData(indexedDataFilename)) {
-
-            // Indexace dat.
-            index.index(documents);
-
-            // Uložení indexovaných dat.
-            index.saveIndexedData(indexedDataFilename);
-        }
-
-        switch(dataType) {
-            // Načtení školních dokumentů.
-            case CUSTOM:
-                searchInDocumentsFromSchool();
-                break;
-
-            // Načtení stažených dat.
-            case CRAWLERED:
-                searchInCrawleredDocuments();
-                break;
-
-            // Default.
-            default:
-                break;
-        }
-    }
-
-    /**
-     * Searching in documents from school.
-     */
-    private static void searchInDocumentsFromSchool() {
-        String query = "";
-
-        switch (index.getSearchType()) {
-            case BOOLEAN:
-                //query = "beta AND (alfa OR c) OR gamma";
-                //query = "2351 AND (715682 OR 717887) OR 717884";
-                //query = "2351";
-                //query = "nízkopodlažního AND NOT slaný OR NOT meclov";
-                query = "autooo AND NOT slaný";
-                //query = "(Praha OR (text1 AND NOT text2)) AND NOT (Brno OR NOT (Praha AND NOT Plzeň)) OR NOT Ostrava";
-                //query = "PRAHA NOT OSTRAVA"; // Defaultně se dává OR.
-                //query = "(Praha OR (text1 AND NOT text2 )) AND NOT ( Brno OR Praha)";
-                //query = "NOT alfa";
-                List<Result> resultHits = index.search(query);
-                System.out.println(resultHits.size());
-                break;
-            case SVM:
-                query = "Prodej chalupy 2+1 s pozemkem o celkové výměře 2033";
-                break;
-        }
-        /*
-
-        List<String> lines = new ArrayList<>();
-        List<Topic> topics = SerializedDataHelper.loadTopic(new File(Constants.FILENAME_TOPIC_DATA));
+        List<String> lines = new ArrayList<String>();
 
         for (Topic t : topics) {
-            log.info("Start searching.");
-            long startTime = System.currentTimeMillis();
-            List<Result> resultHits = index.search(t.getTitle() + " " + t.getDescription());
-            long estimatedTime = System.currentTimeMillis() - startTime;
-            log.info("Searching done after " + (double)estimatedTime / 1000 + " seconds");
+            List<Result> resultHits = index.search(t.getNarrative());
 
-            System.out.println("Most relevant results for topic: " + t.getId() + " - " + t.getTitle());
-            System.out.println("----------------------");
+            Comparator<Result> cmp = new Comparator<Result>() {
+                public int compare(Result o1, Result o2) {
+                    if (o1.getScore() > o2.getScore()) return -1;
+                    if (o1.getScore() == o2.getScore()) return 0;
+                    return 1;
+                }
+            };
+
+            Collections.sort(resultHits, cmp);
             for (Result r : resultHits) {
                 final String line = r.toString(t.getId());
                 lines.add(line);
-                System.out.println("TopicID: " + t.getId() + " | DocumentID: " + r.getDocumentID() + " | Score: " + r.getScore() + " | Rank: " + r.getRank());
             }
             if (resultHits.size() == 0) {
                 lines.add(t.getId() + " Q0 " + "abc" + " " + "99" + " " + 0.0 + " runindex1");
             }
         }
-
-         */
+        final File outputFile = new File(OUTPUT_DIR + "/results " + SerializedDataHelper.SDF.format(System.currentTimeMillis()) + ".txt");
+        IOUtils.saveFile(outputFile, lines);
+        //try to run evaluation
+        try {
+            runTrecEval(outputFile.toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    /**
-     * Searching in crawlered documents.
-     */
-    private static void searchInCrawleredDocuments() {
-        String query = "";
-
-        switch (index.getSearchType()) {
-            case BOOLEAN:
-                //query = "beta AND (alfa OR c) OR gamma";
-                //query = "2351 AND (715682 OR 717887) OR 717884";
-                //query = "2351";
-                //query = "nízkopodlažního AND NOT slaný OR NOT meclov";
-                query = "nízkopodlažního OR slaný AND meclov";
-                query = "nízkopodlažního AND NOT slaný OR meclov";
-                //query = "autooo OR NOT slaný";
-                //query = "(Praha OR (text1 AND NOT text2)) AND NOT (Brno OR NOT (Praha AND NOT Plzeň)) OR NOT Ostrava";
-                //query = "PRAHA NOT OSTRAVA"; // Defaultně se dává OR.
-                //query = "(Praha OR (text1 AND NOT text2 )) AND NOT ( Brno OR Praha)";
-                //query = "NOT alfa";
-                break;
-            case SVM:
-                query = "Prodej chalupy 2+1 s pozemkem o celkové výměře 2033";
-                break;
-        }
-
-        long startTime = System.currentTimeMillis();
-        // TODO: ve finální verzi nastavit maximální počet relevantních dokumentů na velikost dokumentů.
-        List<Result> resultHits = index.search(query);
-        long estimatedTime = System.currentTimeMillis() - startTime;
-        log.info("Searching done after " + (double)estimatedTime / 1000 + " seconds");
-
-        System.out.println("Most relevant results for query: " + query);
-        System.out.println("----------------------");
-        for (Result r : resultHits) {
-            CrawleredDocument document = getCrawleredDocument(r.getDocumentID());
-            System.out.println("DocumentID: " + r.getDocumentID() + " | Score: " + r.getScore() + " | Rank: " + r.getRank() + " | Title: " + document.getTitle()
-            + " | Description: " + document.getDescription());
-        }
-        System.out.println();
-    }
-
-    /**
-     * Get crawlered document by its ID.
-     * @param id - ID of document.
-     * @return Crawlered document.
-     */
-    private static CrawleredDocument getCrawleredDocument(String id) {
-        for (Document document: documents) {
-            if (document.getId().equals(id)) return (CrawleredDocument)document;
-        }
-        return null;
-    }
-
-    /**
-     * Running trec evaluation.
-     * @param predictedFile - File with results.
-     * @return Output from test.
-     * @throws IOException
-     */
     private static String runTrecEval(String predictedFile) throws IOException {
 
         String commandLine = "./trec_eval.8.1/./trec_eval" +
@@ -243,28 +150,5 @@ public class TestTrecEval {
         stderr.close();
 
         return trecEvalOutput;
-    }
-
-
-    /**
-     * Logger configuration.
-     */
-    protected static void configureLogger() {
-        BasicConfigurator.resetConfiguration();
-        BasicConfigurator.configure();
-
-        File results = new File(Constants.OUTPUT_DIR);
-        if (!results.exists()) {
-            results.mkdir();
-        }
-
-        try {
-            Appender appender = new WriterAppender(new PatternLayout(), new FileOutputStream(new File(Constants.OUTPUT_DIR + "/" + SerializedDataHelper.SDF.format(System.currentTimeMillis()) + " - " + ".log"), false));
-            BasicConfigurator.configure(appender);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        Logger.getRootLogger().setLevel(Level.INFO);
     }
 }

@@ -448,7 +448,7 @@ public class Index implements Indexer, Searcher {
      * Nastaví počet dokumentů, který se mají vrátit z hledání.
      * @param mostRelevantDocumentsCount - Počet dokumentů.
      */
-    public void setMostRelevantDocumentsCount(short mostRelevantDocumentsCount) {
+    public void setMostRelevantDocumentsCount(int mostRelevantDocumentsCount) {
         this.mostRelevantDocumentsCount = mostRelevantDocumentsCount;
     }
 
@@ -466,5 +466,12 @@ public class Index implements Indexer, Searcher {
      */
     public ESearchType getSearchType() {
         return searchType;
+    }
+
+    /**
+     * Vytvoří novou instanci dictionary.
+     */
+    public void resetDictionary() {
+        this.dictionary = new Dictionary();
     }
 }
