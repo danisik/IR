@@ -239,7 +239,7 @@ public class Index implements Indexer, Searcher {
                     results = new ArrayList<>(processQuery(q));
                 } catch (ParseException | QueryNodeException e) {
                     log.warn("Query '" + query + "' is not valid query!");
-                    break;
+                    return null;
                 }
 
                 break;

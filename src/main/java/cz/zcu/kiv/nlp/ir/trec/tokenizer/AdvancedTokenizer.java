@@ -85,7 +85,7 @@ public class AdvancedTokenizer implements Tokenizer {
             int start = matcher.start();
             int end = matcher.end();
             String word = text.substring(start, end);
-            if (!stopwords.contains(word) && word.length() > 0) words.add(word);
+            if (!stopwords.contains(word) && word.length() > 1) words.add(word);
         }
 
         return words;

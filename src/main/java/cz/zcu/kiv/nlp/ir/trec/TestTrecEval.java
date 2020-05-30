@@ -91,7 +91,8 @@ public class TestTrecEval {
         List<String> lines = new ArrayList<String>();
 
         for (Topic t : topics) {
-            List<Result> resultHits = index.search(t.getNarrative());
+            // Tato kombinace položek z topicu dává největší MAP (cca 0,23).
+            List<Result> resultHits = index.search(t.getTitle() + " " + t.getDescription() + " " + t.getNarrative());
 
             Comparator<Result> cmp = new Comparator<Result>() {
                 public int compare(Result o1, Result o2) {
