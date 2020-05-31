@@ -35,13 +35,9 @@
             </Label>
             <Label fx:id="lblRelevantDocumentCount" layoutX="14.0" layoutY="53.0" text="Počet nejrelevantnějších dokumentů:" />
             <Spinner fx:id="spinnerDocumentCount" editable="true" layoutX="213.0" layoutY="49.0" prefHeight="25.0" prefWidth="91.0" />
-            <ScrollPane fitToWidth="true" hbarPolicy="ALWAYS" layoutX="314.0" layoutY="50.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minViewportHeight="1000.0" minWidth="0.0" prefHeight="501.0" prefViewportHeight="1000.0" prefWidth="627.0" vbarPolicy="ALWAYS">
+            <ScrollPane fitToWidth="true" hbarPolicy="ALWAYS" layoutX="314.0" layoutY="50.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minViewportHeight="1000.0" minWidth="0.0" prefHeight="501.0" prefViewportHeight="1000.0" prefViewportWidth="1000.0" prefWidth="627.0" vbarPolicy="ALWAYS">
               <content>
-                <AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" prefHeight="501.0" prefWidth="624.0">
-                     <children>
                         <TextFlow fx:id="txtFlowDocumentInfo" layoutX="-1.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" prefHeight="501.0" prefWidth="627.0" style="-fx-background-color: white; -fx-border-color: lightgray;" />
-                     </children>
-                  </AnchorPane>
               </content>
             </ScrollPane>
          </children>

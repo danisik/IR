@@ -7,15 +7,7 @@ import cz.zcu.kiv.nlp.ir.trec.indexer.Index;
 import cz.zcu.kiv.nlp.ir.trec.stemmer.CzechStemmerAgressive;
 import cz.zcu.kiv.nlp.ir.trec.tokenizer.AdvancedTokenizer;
 import org.apache.log4j.*;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.*;
 import java.io.*;
-import java.text.ParseException;
 import java.util.*;
 
 

@@ -62,6 +62,7 @@ public class Index implements Indexer, Searcher {
     private String defaultField;
 
     private ESearchType searchType;
+    private THashSet<String> queryTokens;
 
     /**
      * Constructor.
@@ -89,6 +90,8 @@ public class Index implements Indexer, Searcher {
 
         // Query parser s prioritou operátorů (AND -> OR).
         this.parser = new PrecedenceQueryParser(new WhitespaceAnalyzer());
+
+        queryTokens = new THashSet<>();
 
         log.info("Stemmer: " + stemmer.getClass().getSimpleName());
         log.info("Tokenizer: " + tokenizer.getClass().getSimpleName());
@@ -207,6 +210,8 @@ public class Index implements Indexer, Searcher {
      * @return List výsledků nejvíce relevantních k zadané query.
      */
     public List<Result> search(String query) {
+        queryTokens.clear();
+
         List<Result> results = new ArrayList<>();
 
         switch(searchType) {
@@ -217,8 +222,12 @@ public class Index implements Indexer, Searcher {
                 // Tokenize query.
                 ArrayList<String> words = tokenizer.tokenize(query);
                 for (String word : words) {
+                    String preprocessedWord = getProcessedForm(word);
+
+                    queryTokens.add(preprocessedWord.toLowerCase());
+
                     // Apply stemmer and lemmatizer on word.
-                    indexedQuery.addWord(getProcessedForm(word));
+                    indexedQuery.addWord(preprocessedWord);
                 }
 
                 // Calculate tfidf for query words.
@@ -232,9 +241,7 @@ public class Index implements Indexer, Searcher {
             case BOOLEAN:
                 Query q;
                 try {
-
                     String newQuery = BooleanQueryPreparer.prepareQuery(Arrays.asList(query.split(" ")));
-
                     q = parser.parse(newQuery, this.defaultField);
                     results = new ArrayList<>(processQuery(q));
                 } catch (ParseException | QueryNodeException e) {
@@ -294,7 +301,11 @@ public class Index implements Indexer, Searcher {
         if (query instanceof TermQuery) {
             // Pokud je query typu TermQuery, tak získej seznam hodnot dokumentů pro zpracované slovo.
             Term term = ((TermQuery)query).getTerm();
+
             String text = getProcessedForm(term.text());
+
+            // Přidej tento term do seznamu tokenů -> pro zvýrazňování textu.
+            queryTokens.add(text.toLowerCase());
 
             WordValues wordValues = dictionary.getWordValues(text);
 
@@ -428,7 +439,7 @@ public class Index implements Indexer, Searcher {
      * @param word - Zpracovávané slovo.
      * @return Zpracované slovo.
      */
-    private String getProcessedForm(String word) {
+    public String getProcessedForm(String word) {
         if (toLowercase) {
             word = word.toLowerCase();
         }
@@ -473,5 +484,9 @@ public class Index implements Indexer, Searcher {
      */
     public void resetDictionary() {
         this.dictionary = new Dictionary();
+    }
+
+    public THashSet<String> getQueryTokens() {
+        return this.queryTokens;
     }
 }

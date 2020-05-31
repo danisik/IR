@@ -4,14 +4,7 @@
  */
 package cz.zcu.kiv.nlp.ir.trec.tokenizer;
 
-import cz.zcu.kiv.nlp.ir.trec.data.Constants;
 import cz.zcu.kiv.nlp.ir.trec.utils.Utils;
-import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.cz.CzechAnalyzer;
-import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
-
-import java.io.*;
-import java.lang.reflect.Array;
 import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.List;

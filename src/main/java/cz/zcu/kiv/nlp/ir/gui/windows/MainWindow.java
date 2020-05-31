@@ -13,16 +13,23 @@ import cz.zcu.kiv.nlp.ir.trec.data.result.Result;
 import cz.zcu.kiv.nlp.ir.trec.indexer.Index;
 import cz.zcu.kiv.nlp.ir.trec.stemmer.CzechStemmerAgressive;
 import cz.zcu.kiv.nlp.ir.trec.tokenizer.AdvancedTokenizer;
+import gnu.trove.set.hash.THashSet;
 import javafx.application.Application;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.CornerRadii;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
@@ -31,6 +38,9 @@ import org.apache.log4j.*;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Hlavní třída aplikace.
+ */
 public class MainWindow extends Application {
 
     /** GUI prvky. */
@@ -76,13 +86,23 @@ public class MainWindow extends Application {
     private final int minSpinnerValue = 0;
     private final int maxSpinnerValue = 100000;
 
+    /** Logger v aplikaci. */
     static Logger log = Logger.getLogger(MainWindow.class);
 
+    /**
+     * Main metoda.
+     * @param args - Vstupní parametry.
+     */
     public static void main(String[] args) {
         configureLogger();
         launch(args);
     }
 
+    /**
+     * Startovací metoda pro okno.
+     * @param stage - Hlavní stage aplikace-
+     * @throws Exception - Exception.
+     */
     @Override
     public void start(Stage stage) throws Exception {
         Parent root = FXMLLoader.load(Objects.requireNonNull(getClass().getClassLoader().getResource("cz/zcu/kiv/nlp/ir/gui/windows/MainWindow.fxml")));
@@ -92,6 +112,10 @@ public class MainWindow extends Application {
         stage.show();
     }
 
+    /**
+     * Načtení a zaindexování dokumentů podle zvoleného dataType.
+     * @param dataType - Typ dat.
+     */
     private void loadDocuments(EDataType dataType) {
         try {
             switch (dataType) {
@@ -129,16 +153,22 @@ public class MainWindow extends Application {
             setStatus("Indexace dokončena");
         }
         catch (Exception e) {
+            // Pokud nastala chyba při načítání nebo indexaci, nastav list dokumentů na null hodnotu.
             documents = null;
         }
     }
 
+    /**
+     * Inicializace dat pro GUI prvky a Indexer.
+     */
     @FXML
     public void initialize() {
+        // Defaultní data pro combobox reprezentující typ dat.
         cmbDataType.getItems().add("CRAWLERED");
         cmbDataType.getItems().add("CUSTOM");
         cmbDataType.getSelectionModel().select(0);
 
+        // Defaultní data pro combobox reprezentující typ hledání.
         cmbSearchType.getItems().add("SVM");
         cmbSearchType.getItems().add("BOOLEAN");
         cmbSearchType.getSelectionModel().select(0);
@@ -147,10 +177,15 @@ public class MainWindow extends Application {
         spinnerValueFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(minSpinnerValue, maxSpinnerValue, initialSpinnerValue);
         spinnerDocumentCount.setValueFactory(spinnerValueFactory);
 
+        // Inicializace indexeru.
         index = new Index(new CzechStemmerAgressive(), new AdvancedTokenizer(Constants.FILENAME_STOPWORDS),
                 "", false, true, true, 10);
     }
 
+    /**
+     * Click event pro tlačítko "Vyhledat".
+     * @param actionEvent - Event.
+     */
     @FXML
     public void search(ActionEvent actionEvent) {
         // Zjištění zvoleného typu vyhledávání.
@@ -164,12 +199,15 @@ public class MainWindow extends Application {
         index.setSearchType(selectedSearchType);
         index.setMostRelevantDocumentsCount(spinnerValueFactory.getValue());
 
+        // Pokud ještě nebyly načteny žádné dokumenty nebo se změnil typ dat pro vyhledávání, tak načti dokumenty.
         if (documents == null || currentDataType != selectedDataType) {
             loadDocuments(selectedDataType);
             if (documents == null) {
                 setStatus("Nastal error při indexaci dokumentů!");
                 return;
             }
+
+            currentDataType = selectedDataType;
         }
 
         setStatus("Hledání nejrelevantnějších dokumentů");
@@ -185,17 +223,24 @@ public class MainWindow extends Application {
 
         listDocuments.getItems().clear();
 
+        // Přidej výsledky do listu dokumentů v GUI.
         for (Result r : resultHits) {
             listDocuments.getItems().add(r.getDocumentID());
         }
 
+        // Nastav číslo reprezentující počet nalezených dokumentů.
         setDocumentCount(resultHits.size());
     }
 
+    /**
+     * Zobrazení informací pro daný dokument při kliknutí na položku v seznamu vyhledaných dokumentů.
+     * @param mouse - Event.
+     */
     @FXML
     public void displayDocumentInfo(MouseEvent mouse) {
         String item = listDocuments.getSelectionModel().getSelectedItem();
 
+        // Kontrola jestli uživatel klikl na nějaký prvek v listu nebo do práznda.
         if (item == null) {
             mouse.consume();
         }
@@ -206,17 +251,23 @@ public class MainWindow extends Application {
         }
     }
 
+    /**
+     * Zobrazení informací daného dokumentu v textflow.
+     * @param document
+     */
     private void prepareTextFlow(Document document) {
         ObservableList<Node> childrens = txtFlowDocumentInfo.getChildren();
         childrens.addAll(addDocumentInfo("ID", document.getId()), new Text(System.lineSeparator()));
 
         if (document instanceof DocumentNew) {
+            // Zobrazení informací pro školní dokument.
             DocumentNew doc = (DocumentNew) document;
             childrens.addAll(addDocumentInfo("Titulek", doc.getTitle()), new Text(System.lineSeparator()));
             childrens.addAll(addDocumentInfo("Text", doc.getText()), new Text(System.lineSeparator()));
             childrens.addAll(addDocumentInfo("Datum", doc.getDate().toString()), new Text(System.lineSeparator()));
         }
         else if (document instanceof CrawleredDocument) {
+            // Zobrazení informací pro stažený dokument.
             CrawleredDocument doc = (CrawleredDocument) document;
             childrens.addAll(addDocumentInfo("Titulek", doc.getTitle()), new Text(System.lineSeparator()));
             childrens.addAll(addDocumentInfo("Cena", doc.getPrice()), new Text(System.lineSeparator()));
@@ -269,25 +320,76 @@ public class MainWindow extends Application {
         }
     }
 
+    /**
+     * Získání textflow pro daný atribut dokumentu.
+     * @param stringTitle - Název atributu (např. Title).
+     * @param stringText - Hodnota atributu (např. Prodej domu).
+     * @return Nastylovaný textflow s labely.
+     */
     private Node addDocumentInfo(String stringTitle, String stringText) {
         TextFlow textFlow = new TextFlow();
         textFlow.setPrefWidth(txtFlowDocumentInfo.getPrefWidth());
+
+        // Vymaž veškerá odřádkování z textu.
         stringTitle = stringTitle.replaceAll("\\n\\r|\\r\\n|\\r|\\n", "");
 
-        Text title = new Text(" " + stringTitle);
+        // Nastavení titulku atributu.
+        Text title = new Text(" " + stringTitle + ": ");
         title.setStyle("-fx-font-weight: bold");
 
-        Text text = new Text(": " + stringText);
+        textFlow.getChildren().add(title);
 
-        textFlow.getChildren().addAll(title, text);
+        // Získání jednotlivých slov ze zadaný query.
+        THashSet<String> queryTokens = index.getQueryTokens();
+
+        // Získání jednotlivých slov z popisku atributu.
+        String[] textTokens = stringText.split(" ");
+
+        // Cyklus projede všechny slova z popisku atributu
+        // a pokud se dané slovo nachází v query, tak ho zvýrazni.
+        for (int i = 0; i < textTokens.length; i++) {
+            String token = textTokens[i];
+            Label text = new Label(token);
+            token = token.toLowerCase();
+
+            String preprocessedToken = index.getProcessedForm(token);
+
+            if (queryTokens.contains(preprocessedToken)) {
+                // Nastavení barvy textu na bílou.
+                text.setTextFill(Color.WHITE);
+
+                // Nastavení background color na červenou.
+                AnchorPane anchorPane = new AnchorPane();
+                anchorPane.getChildren().add(text);
+                anchorPane.setBackground(new Background(new BackgroundFill(Color.RED, CornerRadii.EMPTY, Insets.EMPTY)));
+
+                textFlow.getChildren().add(anchorPane);
+            }
+            else {
+                textFlow.getChildren().add(text);
+            }
+
+            // Pokud aktuální token není poslední, tak přidej mezeru.
+            if ((i + 1) < textTokens.length) {
+                textFlow.getChildren().add(new Text(" "));
+            }
+        }
 
         return textFlow;
     }
 
+    /**
+     * Nastavení textu pro status.
+     * @param text - Zobrazovaný text.
+     */
     private void setStatus(String text) {
         lblStatusDescription.setText(text);
     }
 
+    /**
+     * Nastavení čísla reprezentující počet nalezených dokumentů.
+     * @param documentCount
+     */
     private void setDocumentCount(int documentCount) {
         lblDocumentCountsNumber.setText("" + documentCount);
     }
@@ -304,6 +406,9 @@ public class MainWindow extends Application {
         return null;
     }
 
+    /**
+     * Nastavení loggeru.
+     */
     protected static void configureLogger() {
         BasicConfigurator.resetConfiguration();
         BasicConfigurator.configure();
