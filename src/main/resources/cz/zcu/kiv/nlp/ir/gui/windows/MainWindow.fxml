@@ -22,7 +22,7 @@
             <Button fx:id="btnSearch" layoutX="859.0" layoutY="14.0" mnemonicParsing="false" onAction="#search" prefHeight="25.0" prefWidth="85.0" text="Vyhledat" />
             <ListView fx:id="listDocuments" layoutX="14.0" layoutY="104.0" onMouseClicked="#displayDocumentInfo" prefHeight="447.0" prefWidth="283.0" />
             <Label fx:id="lblDocumentCountsInfo" layoutX="14.0" layoutY="70.0" prefHeight="25.0" prefWidth="195.0" text="Počet nalezených dokumentů:" />
-            <Label fx:id="lblDocumentCountsNumber" layoutX="185.0" layoutY="70.0" prefHeight="25.0" prefWidth="48.0" text="0" />
+            <Label fx:id="lblDocumentCountsNumber" layoutX="185.0" layoutY="70.0" prefHeight="25.0" prefWidth="117.0" text="0" />
             <Label fx:id="lblStatusText" layoutX="14.0" layoutY="549.0" prefHeight="35.0" prefWidth="59.0" text="Status:">
                <font>
                   <Font size="16.0" />

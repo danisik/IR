@@ -234,7 +234,7 @@ public class Index implements Indexer, Searcher {
                 calculateDocumentWordsTFIDF(indexedQuery);
 
                 // Compare cosine similarities and return most relevant documents.
-                results = CosineSimilarity.getMostRelevantDocumentToQuery(dictionary, indexedQuery, mostRelevantDocumentsCount);
+                results = CosineSimilarity.getMostRelevantDocumentToQuery(dictionary, indexedQuery);
                 break;
 
             // BOOLEAN searching.
@@ -257,6 +257,33 @@ public class Index implements Indexer, Searcher {
         }
 
         return results;
+    }
+
+    /**
+     * Získání X nejrelevantnějších dokumentů ze všech výsledků.
+     * @param allRecords - Výsledky.
+     * @return List nejrelevantnějších dokumentů.
+     */
+    public List<Result> getMostRelevantDocuments(List<Result> allRecords) {
+
+        int optimalCount = mostRelevantDocumentsCount;
+
+        if (allRecords.size() < mostRelevantDocumentsCount) {
+            optimalCount = allRecords.size();
+        }
+
+        // Get most relevant documents.
+        List<Result> mostRelevantDocuments = allRecords.subList(0, optimalCount);
+
+        for (int i = 0; i < optimalCount; i++) {
+            Result result = mostRelevantDocuments.get(i);
+            System.out.println(result.getScore());
+            if (result instanceof ResultImpl) {
+                ((ResultImpl)result).setRank(i + 1);
+            }
+        }
+
+        return mostRelevantDocuments;
     }
 
     /**

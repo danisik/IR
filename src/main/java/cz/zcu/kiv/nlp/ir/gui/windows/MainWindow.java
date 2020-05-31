@@ -33,6 +33,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.*;
 
 import java.util.List;
@@ -213,23 +214,35 @@ public class MainWindow extends Application {
         setStatus("Hledání nejrelevantnějších dokumentů");
         String query = txtFieldSearch.getText();
         List<Result> resultHits = index.search(query);
+        int mostRelevantDocumentsCount = resultHits.size();
 
         if (resultHits == null) {
             setStatus("Query není validní!");
-            setDocumentCount(0);
+            setDocumentCount(0, 0);
             return;
         }
         setStatus("Hledání dokončeno");
 
         listDocuments.getItems().clear();
 
-        // Přidej výsledky do listu dokumentů v GUI.
-        for (Result r : resultHits) {
-            listDocuments.getItems().add(r.getDocumentID());
+        if (selectedSearchType == ESearchType.SVM) {
+            List<Result> mostRelevantDocuments = index.getMostRelevantDocuments(resultHits);
+            mostRelevantDocumentsCount = mostRelevantDocuments.size();
+
+            // Přidej výsledky do listu dokumentů v GUI.
+            for (Result r : mostRelevantDocuments) {
+                listDocuments.getItems().add(r.getDocumentID());
+            }
+        }
+        else {
+            // Přidej výsledky do listu dokumentů v GUI.
+            for (Result r : resultHits) {
+                listDocuments.getItems().add(r.getDocumentID());
+            }
         }
 
         // Nastav číslo reprezentující počet nalezených dokumentů.
-        setDocumentCount(resultHits.size());
+        setDocumentCount(mostRelevantDocumentsCount, resultHits.size());
     }
 
     /**
@@ -345,14 +358,24 @@ public class MainWindow extends Application {
         // Získání jednotlivých slov z popisku atributu.
         String[] textTokens = stringText.split(" ");
 
+        String basicToken = "";
+        boolean containsBasicChars = false;
+
         // Cyklus projede všechny slova z popisku atributu
         // a pokud se dané slovo nachází v query, tak ho zvýrazni.
         for (int i = 0; i < textTokens.length; i++) {
             String token = textTokens[i];
+            String preprocessedToken = index.getProcessedForm(token);
+
+            if (token.contains(",") || token.contains(".") || token.contains("(") || token.contains(")")) {
+                basicToken = token;
+                token = token.replaceAll(",", "");
+                preprocessedToken = preprocessedToken.replaceAll(",", "");
+                containsBasicChars = true;
+            }
+
             Label text = new Label(token);
             token = token.toLowerCase();
-
-            String preprocessedToken = index.getProcessedForm(token);
 
             if (queryTokens.contains(preprocessedToken)) {
                 // Nastavení barvy textu na bílou.
@@ -369,10 +392,18 @@ public class MainWindow extends Application {
                 textFlow.getChildren().add(text);
             }
 
+            if (containsBasicChars) {
+                Label difference = new Label(StringUtils.difference(token, basicToken.toLowerCase()));
+                textFlow.getChildren().add(difference);
+            }
+
             // Pokud aktuální token není poslední, tak přidej mezeru.
             if ((i + 1) < textTokens.length) {
                 textFlow.getChildren().add(new Text(" "));
             }
+
+            basicToken = "";
+            containsBasicChars = false;
         }
 
         return textFlow;
@@ -388,10 +419,11 @@ public class MainWindow extends Application {
 
     /**
      * Nastavení čísla reprezentující počet nalezených dokumentů.
-     * @param documentCount
+     * @param documentCount - Počet dokumentů (nejrelevantnějších).
+     * @param maxDocumentCount - Počet celkově nalezených dokumentů.
      */
-    private void setDocumentCount(int documentCount) {
-        lblDocumentCountsNumber.setText("" + documentCount);
+    private void setDocumentCount(int documentCount, int maxDocumentCount) {
+        lblDocumentCountsNumber.setText("" + documentCount + " (" + maxDocumentCount + ")");
     }
 
     /**

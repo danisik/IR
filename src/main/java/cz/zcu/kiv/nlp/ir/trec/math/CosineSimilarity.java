@@ -47,20 +47,15 @@ public class CosineSimilarity {
     }
 
     /**
-     * Metoda pro získání nejvíce relevantních dokumentů k zadané query.
+     * Metoda pro získání dokumentů k zadané query.
      * @param dictionary - Slovník.
      * @param query - Query.
-     * @param mostRelevantDocumentsCount - Počet dokumentů.
      * @return List výsledků.
      */
-    public static List<Result> getMostRelevantDocumentToQuery(Dictionary dictionary, DocumentValues query, int mostRelevantDocumentsCount) {
+    public static List<Result> getMostRelevantDocumentToQuery(Dictionary dictionary, DocumentValues query) {
 
         // Get all documents, which contains at least one word as query.
         THashSet<DocumentValues> documentValues = dictionary.getDocumentIDsForQuery(query);
-
-        if (mostRelevantDocumentsCount > documentValues.size()) {
-            mostRelevantDocumentsCount = documentValues.size();
-        }
 
         // Compute cosine similarity for document-query pair.
         List<Result> allRecords = new ArrayList<>();
@@ -70,17 +65,6 @@ public class CosineSimilarity {
 
         allRecords.sort(new ResultComparator());
 
-        // Get most relevant documents.
-        List<Result> mostRelevantDocuments = allRecords.subList(0, mostRelevantDocumentsCount);
-
-        for (int i = 0; i < mostRelevantDocumentsCount; i++) {
-            Result result = mostRelevantDocuments.get(i);
-            if (result instanceof ResultImpl) {
-                ((ResultImpl)result).setRank(i + 1);
-            }
-        }
-
-        // Return K most relevant documents.
-        return mostRelevantDocuments;
+        return allRecords;
     }
 }
