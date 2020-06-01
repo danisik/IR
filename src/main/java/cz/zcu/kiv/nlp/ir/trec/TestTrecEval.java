@@ -58,7 +58,7 @@ public class TestTrecEval {
         configureLogger();
 
         Index index = new Index(new CzechStemmerAgressive(), new AdvancedTokenizer(Constants.FILENAME_STOPWORDS),
-                "", false, true, true, 0);
+                "", false, true, true, 3000);
 
         List<Topic> topics = SerializedDataHelper.loadTopic(new File(OUTPUT_DIR + "/topicData.bin"));
 
@@ -77,7 +77,6 @@ public class TestTrecEval {
         }
         log.info("Documents: " + documents.size());
 
-        index.setMostRelevantDocumentsCount(3000);
         index.index(documents);
 
         List<String> lines = new ArrayList<String>();
