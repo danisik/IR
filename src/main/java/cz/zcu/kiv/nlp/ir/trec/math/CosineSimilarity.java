@@ -52,7 +52,7 @@ public class CosineSimilarity {
      * @param query - Query.
      * @return List výsledků.
      */
-    public static List<Result> getMostRelevantDocumentToQuery(Dictionary dictionary, DocumentValues query) {
+    public static List<Result> geRelevantDocumentsToQuery(Dictionary dictionary, DocumentValues query) {
 
         // Get all documents, which contains at least one word as query.
         THashSet<DocumentValues> documentValues = dictionary.getDocumentIDsForQuery(query);

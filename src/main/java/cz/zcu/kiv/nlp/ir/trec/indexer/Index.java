@@ -238,7 +238,7 @@ public class Index implements Indexer, Searcher {
                 calculateDocumentWordsTFIDF(indexedQuery);
 
                 // Compare cosine similarities and return most relevant documents.
-                results = CosineSimilarity.getMostRelevantDocumentToQuery(dictionary, indexedQuery);
+                results = CosineSimilarity.geRelevantDocumentsToQuery(dictionary, indexedQuery);
                 break;
 
             // BOOLEAN searching.
