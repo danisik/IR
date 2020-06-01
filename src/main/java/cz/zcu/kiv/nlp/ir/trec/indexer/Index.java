@@ -213,7 +213,9 @@ public class Index implements Indexer, Searcher {
         queryTokens.clear();
 
         List<Result> results = new ArrayList<>();
+        log.info("Start searching.");
 
+        long startTime = System.currentTimeMillis();
         switch(searchType) {
             // SVM searching.
             case SVM:
@@ -255,7 +257,8 @@ public class Index implements Indexer, Searcher {
             default:
                 break;
         }
-
+        long estimatedTime = System.currentTimeMillis() - startTime;
+        log.info("Searching done after " + (double)estimatedTime / 1000 + " seconds");
         return results;
     }
 
@@ -277,7 +280,6 @@ public class Index implements Indexer, Searcher {
 
         for (int i = 0; i < optimalCount; i++) {
             Result result = mostRelevantDocuments.get(i);
-            System.out.println(result.getScore());
             if (result instanceof ResultImpl) {
                 ((ResultImpl)result).setRank(i + 1);
             }

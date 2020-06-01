@@ -214,13 +214,14 @@ public class MainWindow extends Application {
         setStatus("Hledání nejrelevantnějších dokumentů");
         String query = txtFieldSearch.getText();
         List<Result> resultHits = index.search(query);
-        int mostRelevantDocumentsCount = resultHits.size();
 
         if (resultHits == null) {
             setStatus("Query není validní!");
             setDocumentCount(0, 0);
             return;
         }
+        int mostRelevantDocumentsCount = resultHits.size();
+
         setStatus("Hledání dokončeno");
 
         listDocuments.getItems().clear();
