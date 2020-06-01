@@ -226,20 +226,12 @@ public class MainWindow extends Application {
 
         listDocuments.getItems().clear();
 
-        if (selectedSearchType == ESearchType.SVM) {
-            List<Result> mostRelevantDocuments = index.getMostRelevantDocuments(resultHits);
-            mostRelevantDocumentsCount = mostRelevantDocuments.size();
+        List<Result> mostRelevantDocuments = index.getMostRelevantDocuments(resultHits);
+        mostRelevantDocumentsCount = mostRelevantDocuments.size();
 
-            // Přidej výsledky do listu dokumentů v GUI.
-            for (Result r : mostRelevantDocuments) {
-                listDocuments.getItems().add(r.getDocumentID());
-            }
-        }
-        else {
-            // Přidej výsledky do listu dokumentů v GUI.
-            for (Result r : resultHits) {
-                listDocuments.getItems().add(r.getDocumentID());
-            }
+        // Přidej výsledky do listu dokumentů v GUI.
+        for (Result r : mostRelevantDocuments) {
+            listDocuments.getItems().add(r.getDocumentID());
         }
 
         // Nastav číslo reprezentující počet nalezených dokumentů.

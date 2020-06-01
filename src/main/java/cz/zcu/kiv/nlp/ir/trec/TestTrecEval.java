@@ -77,7 +77,7 @@ public class TestTrecEval {
         }
         log.info("Documents: " + documents.size());
 
-        index.setMostRelevantDocumentsCount(documents.size());
+        index.setMostRelevantDocumentsCount(3000);
         index.index(documents);
 
         List<String> lines = new ArrayList<String>();

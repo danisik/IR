@@ -64,6 +64,8 @@ public class Index implements Indexer, Searcher {
     private ESearchType searchType;
     private THashSet<String> queryTokens;
 
+    private THashSet<DocumentValues> allDictionaryDocumentValues;
+
     /**
      * Constructor.
      * @param stemmer - Použitý stemmer.
@@ -243,9 +245,17 @@ public class Index implements Indexer, Searcher {
             case BOOLEAN:
                 Query q;
                 try {
+                    allDictionaryDocumentValues = dictionary.getAllDocumentValues();
+
                     String newQuery = BooleanQueryPreparer.prepareQuery(Arrays.asList(query.split(" ")));
                     q = parser.parse(newQuery, this.defaultField);
-                    results = new ArrayList<>(processQuery(q));
+                    THashSet<String> resultsDocumentID = processQuery(q);
+
+                    for (String documentID : resultsDocumentID) {
+                        results.add(new ResultImpl(documentID, 0));
+                    }
+
+
                 } catch (ParseException | QueryNodeException e) {
                     log.warn("Query '" + query + "' is not valid query!");
                     return null;
@@ -324,8 +334,8 @@ public class Index implements Indexer, Searcher {
      * @param query - Query (podporovány TermQuery, BooleanQuery).
      * @return Set výsledků pro daný TermQuery.
      */
-    public THashSet<Result> processQuery(Query query) {
-        THashSet<Result> results = new THashSet<>();
+    public THashSet<String> processQuery(Query query) {
+        THashSet<String> results = new THashSet<>();
 
         if (query instanceof TermQuery) {
             // Pokud je query typu TermQuery, tak získej seznam hodnot dokumentů pro zpracované slovo.
@@ -340,7 +350,7 @@ public class Index implements Indexer, Searcher {
 
             if (wordValues != null) {
                 for (DocumentValues documentValues : wordValues.getDocumentValues()) {
-                    results.add(new ResultImpl(documentValues.getDocumentID(), 0));
+                    results.add(documentValues.getDocumentID());
                 }
             }
         }
@@ -356,7 +366,7 @@ public class Index implements Indexer, Searcher {
             if (queryRecords.size() > 0) {
                 for (int i = 0; i < queryRecords.size(); i++) {
                     QueryRecord record = queryRecords.get(i);
-                    THashSet<Result> queryResults = record.getResults();
+                    THashSet<String> queryResults = record.getResults();
 
                     // Zkontroluj typ operátoru.
                     switch(record.getOccur()) {
@@ -379,22 +389,12 @@ public class Index implements Indexer, Searcher {
                         case MUST_NOT:
                             // Operátor NOT, který je použit buď s AND nebo OR.
 
-                            boolean contains;
-                            for (DocumentValues documentValues : dictionary.getAllDocumentValues()) {
-                                contains = false;
+                            for (DocumentValues documentValues : allDictionaryDocumentValues) {
 
                                 // Pokud se dokument nenachází ve výsledkách pro daný token, tak ho přidej do výsledků.
-                                for (Result result : queryResults) {
-                                    if (result.getDocumentID().equals(documentValues.getDocumentID())) {
-                                        contains = true;
-                                        break;
-                                    }
+                                if (!queryResults.contains(documentValues.getDocumentID())) {
+                                    results.add(documentValues.getDocumentID());
                                 }
-
-                                if (!contains) {
-                                    results.add(new ResultImpl(documentValues.getDocumentID(), 0));
-                                }
-
                             }
                             break;
                     }

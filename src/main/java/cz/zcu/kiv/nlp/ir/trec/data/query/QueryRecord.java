@@ -13,14 +13,14 @@ public class QueryRecord {
     private BooleanClause.Occur occur;
 
     /** Seznam výsledků pro danou klauzuli. */
-    private THashSet<Result> results;
+    private THashSet<String> results;
 
     /**
      * Konstruktor.
      * @param occur - Operátor.
      * @param results - Seznam výsledků.
      */
-    public QueryRecord(BooleanClause.Occur occur, THashSet<Result> results) {
+    public QueryRecord(BooleanClause.Occur occur, THashSet<String> results) {
         this.occur = occur;
         this.results = results;
     }
@@ -37,7 +37,7 @@ public class QueryRecord {
      * Získání výsledků.
      * @return Seznam výsledků.
      */
-    public THashSet<Result> getResults() {
+    public THashSet<String> getResults() {
         return this.results;
     }
 }
