@@ -210,13 +210,22 @@ Při zvýrazňování textu je daný text nejdříve rozparsován na tokeny pomo
 \newpage
 
 \section{Uživatelská příručka}
-
+Po startnutí aplikace se objeví hlavní okno (viz obrázek \ref{fig:main}).
 \begin{figure}[h]
 	\centering
 	\includegraphics[width=15cm]{img/main.png}
 	\caption{Hlavní okno}
 	\label{fig:main}
 \end{figure}
+Na hlavním okne lze nalézt přepínač na typ prohledávaných dat (levý horní roh). Tento přepínač obsahuje 2 možnosti: CRAWLERED a CUSTOM (školní data). V případě že dojde ke změně typu dat, aplikace před samotným vyhledáním musí provést indexaci dat (ať už celou indexaci, nebo načtení ze souboru).
+
+Napravo od přepínače na typ dat lze nalézt textové pole, které slouží jako vstup pro vyhledávací query. Do query lze napsat cokoliv (pokud je query špatně napsaná, vyhodí aplikace chybu - stává se pouze u boolean vyhledávání).
+
+Za textovým polem se nachází druhý přepínač, který slouží pro výběr typu vyhledávání. Tento přepínač obsahuje 2 možnosti: SVM (Vector Space Model) a BOOLEAN.
+
+Pro vyhledání relevantních dokumentů na základě zvoleného typu dat, typu vyhledávání a zadané query postačí kliknout na tlačítko "Vyhledat", které provede vyhledávání. Výsledky vyhledávání lze vidět v levém listboxu, ve kterém se (pokud jsou relevantní k zadané query) objeví ID dokumentů. Počet nejrelevantnějších dokumentů si lze navolit. Výsledný počet dokumentů lze vidět nad listboxem, kdy formát je následující: "Počet nalezených dokumentů: Počet nejvíce nejrelevantnějších dokumentů (Počet všech nejrelevantnějších dokumentů)".
+
+Pro zobrazení informací u relevantního dokumentu postačí kliknout na kterékoliv ID dokumentu v daném listboxu (viz obrázek \ref{fig:search_boolean} pro BOOLEAN vyhledávání, nebo viz obrázek \ref{fig:search_svm} pro SVM vyhledávání).
 
 \begin{figure}[h]
 	\centering
@@ -224,6 +233,7 @@ Při zvýrazňování textu je daný text nejdříve rozparsován na tokeny pomo
 	\caption{Boolean vyhledávání}
 	\label{fig:search_boolean}
 \end{figure}
+\newpage
 
 \begin{figure}[h]
 	\centering
@@ -232,9 +242,14 @@ Při zvýrazňování textu je daný text nejdříve rozparsován na tokeny pomo
 	\label{fig:search_svm}
 \end{figure}
 
+Pokud se hledané slovo v query nachází v daném dokumentu, je v informacích o daném dokumentu toto slovo zvýrazněno v červeném čtverečku.
+
 \newpage
 
 \section{Závěr}
+Semestrální práce splňuje zadanou funkcionalitu. Aplikace bez problému zvládá zaindexovat jak školní data (v průměru 150 sekund na indexaci), tak i crawlered data stažená na prvním cvičení (v průměru 8 sekund na indexaci). V aplikaci jsou naimplementovaný 2 modely vyhledávání, které správně vyhledají výsledky podle zadané query. V průměru na jednu query trvá vyhledávání od 0,1 sekundy (pro nejjednodušší query) až do 4 sekund (pro ty nejtěžší, většinou pro BOOLEAN query obsahující velké množství NOT operátorů). Veškeré výsledky jsou následně zobrazeny v GUI aplikace. Zároveň byly navíc implementovány funkce: GUI, File-based index a Zvýraznění hledaného textu v náhledu výsledků + dokumentace psaná v TeX.
+
+Pro testování výsledků byl použit test "TestTrecEval", který se nachází v interface aplikace. Byly vyzkoušeny 4 kombinace polí v příspěvku, který sloužil jako vyhledávací query. Výsledky lze vidět v tabulce \ref{fig:map_combination}.
 
 \begin{table}[h!]
   \begin{center}
@@ -256,6 +271,8 @@ Description + Narrative & 0.2065\\
 	\caption{MAP pro kombinace polí v query}
 	\label{fig:map_combination}
 \end{table}
+
+Jak lze vidět z tabulky, největší MAP vrací test při použití kombinace Title + Description + Narrative, kdy výsledek tohoto testu lze vidět na obrázku \ref{fig:evaluation}.
 
 \begin{figure}[h]
 	\centering
